@@ -1,4 +1,4 @@
-package com.maria.finance.user.domain.repository;
+package com.maria.finance.user.infrastructure.persistence.repository;
 
 import com.maria.finance.user.infrastructure.persistence.entity.UserEntity;
 import org.springframework.data.jpa.repository.JpaRepository;

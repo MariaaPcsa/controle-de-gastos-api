@@ -159,7 +159,6 @@ Adicione dependência:
     <version>2.2.0</version>
 </dependency>
 
-
 Banco para teste
 
 http://localhost:8080/h2-console
@@ -174,6 +173,7 @@ Driver Class	org.h2.Driver
 
 URL da documentação:
 
+[users_upload.test.xlsx]
 http://localhost:8080/swagger-ui.html
 
 http://localhost:8080/swagger-ui/index.html
@@ -186,6 +186,17 @@ No pom.xml do transaction-service (ou outro microserviço):
     <version>2.5.0</version>
 </dependency>
 
+{
+"name": "Maria Silva",
+"email": "maria@email.com",
+"password": "123456"
+}
+
+GET http://localhost:84/users
+POST http://localhost:84/users
+http://localhost:84/upload
+
+
 
 👉 Sem isso, Swagger não aparece.
 
@@ -193,3 +204,32 @@ Depois de adicionar:
 
 mvn clean install
 
+git commit -m "validação tokens JWT,"
+
+
+POST /api/auth/register
+Content-Type: application/json
+
+{
+"name": "Maria Silva",
+"email": "maria@email.com",
+"password": "123456",
+"type": "ADMIN"
+}
+
+POST /api/auth/login
+Content-Type: application/json
+
+{
+"email": "maria@email.com",
+"password": "123456"
+}
+
+{
+"token": "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9..."
+}
+
+
+
+
+Exemplo de JSON para criar usuário:

@@ -1,9 +1,9 @@
 package com.maria.finance.user.domain.repository;
 
 import com.maria.finance.user.domain.model.User;
-import com.maria.finance.user.domain.repository.UserRepository;
 import com.maria.finance.user.infrastructure.persistence.entity.UserEntity;
 import com.maria.finance.user.infrastructure.persistence.mapper.UserMapper;
+import com.maria.finance.user.infrastructure.persistence.repository.UserRepositoryJpa;
 import org.springframework.stereotype.Repository;
 
 import java.util.List;

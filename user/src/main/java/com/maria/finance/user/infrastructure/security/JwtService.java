@@ -1,5 +1,8 @@
 package com.maria.finance.user.infrastructure.security;
 
+import com.maria.finance.user.application.service.UserApplicationService;
+import com.maria.finance.user.domain.model.User;
+import io.jsonwebtoken.Claims;
 import io.jsonwebtoken.Jwts;
 import io.jsonwebtoken.SignatureAlgorithm;
 import io.jsonwebtoken.security.Keys;
@@ -11,26 +14,63 @@ import java.util.Date;
 @Service
 public class JwtService {
 
-    private static final String SECRET =
-            "minha-chave-super-secreta-com-pelo-menos-32-bytes!!!";
+    private final Key key = Keys.secretKeyFor(SignatureAlgorithm.HS256);
+    private final long expirationMs = 1000 * 60 * 60; // 1h
 
-    private final Key key = Keys.hmacShaKeyFor(SECRET.getBytes());
+    private final UserApplicationService userService;
 
-    public String generateToken(String email) {
+    public JwtService(UserApplicationService userService) {
+        this.userService = userService;
+    }
+
+    // Gerar token
+    public String generateToken(User user) {
         return Jwts.builder()
-                .setSubject(email)
+                .setSubject(user.getEmail())
+                .claim("id", user.getId())
+                .claim("role", user.getType().name())
                 .setIssuedAt(new Date())
-                .setExpiration(new Date(System.currentTimeMillis() + 86400000))
-                .signWith(key, SignatureAlgorithm.HS256)
+                .setExpiration(new Date(System.currentTimeMillis() + expirationMs))
+                .signWith(key)
                 .compact();
     }
 
-    public String extractEmail(String token) {
-        return Jwts.parserBuilder()
+    // Validar token
+    public boolean validateToken(String token) {
+        try {
+            Jwts.parserBuilder()
+                    .setSigningKey(key)
+                    .build()
+                    .parseClaimsJws(token);
+            return true;
+        } catch (Exception e) {
+            return false;
+        }
+    }
+
+    // Extrair email do token
+    public String getEmailFromToken(String token) {
+        Claims claims = Jwts.parserBuilder()
                 .setSigningKey(key)
                 .build()
                 .parseClaimsJws(token)
-                .getBody()
-                .getSubject();
+                .getBody();
+        return claims.getSubject();
+    }
+
+    // 🔹 Novo método para obter User do header Authorization
+    public User getUserFromHeader(String authHeader) {
+        if (authHeader == null || !authHeader.startsWith("Bearer ")) {
+            throw new RuntimeException("Token inválido ou ausente");
+        }
+
+        String token = authHeader.substring(7);
+        if (!validateToken(token)) {
+            throw new RuntimeException("Token inválido");
+        }
+
+        String email = getEmailFromToken(token);
+        return userService.findByEmail(email)
+                .orElseThrow(() -> new RuntimeException("Usuário do token não encontrado"));
     }
 }
