@@ -19,7 +19,7 @@ Projeto desenvolvido como **desafio final de curso**, utilizando boas práticas 
 ## 🚀 Tecnologias
 
 - ☕ Java 21  
-- 🌱 Spring Boot  
+- Spring Boot  
 - 🔐 Spring Security + JWT  
 - 🐳 Docker + Docker Compose  
 - 📦 Maven  
