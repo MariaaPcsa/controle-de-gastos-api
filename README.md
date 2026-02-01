@@ -18,7 +18,7 @@ Projeto desenvolvido como **desafio final de curso**, utilizando boas práticas 
 
 ## 🚀 Tecnologias
 
-- ☕ Java 17  
+- ☕ Java 21  
 - 🌱 Spring Boot  
 - 🔐 Spring Security + JWT  
 - 🐳 Docker + Docker Compose  
@@ -59,7 +59,7 @@ controle-de-gastos-api
 
 ### 📌 Pré-requisitos
 
-- Java 17  
+- Java 21  
 - Maven  
 - Docker e Docker Compose  
 
@@ -96,21 +96,25 @@ Você poderá testar todos os endpoints direto pelo navegador 😎
 Método	Rota	Descrição
 POST	/api/auth/register	Cadastro de usuário
 POST	/api/auth/login	Login e geração do JWT
+
 👤 Usuários
 Método	Rota	Descrição
 GET	/api/users	Lista usuários
 GET	/api/users/{id}	Buscar por ID
 DELETE	/api/users/{id}	Deletar usuário
+
 💸 Transações
 Método	Rota	Descrição
 POST	/api/transactions	Criar transação
 GET	/api/transactions	Listar transações
 PUT	/api/transactions/{id}	Atualizar
 DELETE	/api/transactions/{id}	Remover
+
 📊 Relatórios (Em desenvolvimento 🚧)
 Método	Rota	Descrição
 GET	/api/analytics/summary	Resumo financeiro
 GET	/api/analytics/monthly	Gastos por mês
+
 📥 Importação de Excel (Em desenvolvimento 🚧)
 Arquivo de exemplo:
 
@@ -122,6 +126,7 @@ Formato esperado:
 
 Nome	Email	Senha
 Maria	maria@email.com	123456
+
 🔒 Segurança
 Autenticação via JWT
 
@@ -130,8 +135,10 @@ Rotas protegidas com Spring Security
 Enviar token no header:
 
 Authorization: Bearer SEU_TOKEN_AQUI
+
 🧪 Testes
 mvn test
+
 🚀 Deploy (Sugestão)
 Você pode publicar no:
 
