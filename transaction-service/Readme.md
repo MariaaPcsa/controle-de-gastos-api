@@ -1,4 +1,6 @@
 🧱 VISÃO GERAL – TRANSACTION SERVICE
+
+--- jar:3.4.2:jar (default-jar) @ transaction-service ---
 Responsabilidades
 
 Registrar transações financeiras
@@ -10,7 +12,7 @@ Publicar eventos no Kafka
 Servir dados para o analysis-service
 
 
-📁 ESTRUTURA FINAL
+📁 ESTRUTURA inicial
 transaction-service/
 │
 ├── domain/
@@ -47,6 +49,10 @@ transaction-service/
 │
 └── Dockerfile
 
+
+http://localhost:8080/swagger-ui.html
+
+http://localhost:8080/swagger-ui/index.html
 🧠 DOMAIN (NEGÓCIO PURO)
 Transaction.java
 package domain.model;

@@ -1,31 +1,49 @@
 package com.finance.analytics_service.application.service;
 
 
-
+import com.finance.analytics_service.domain.model.ExpenseSummary;
+import com.finance.analytics_service.domain.repository.ExpenseRepository;
 import com.finance.analytics_service.domain.usecase.GenerateReportUseCase;
 import com.finance.analytics_service.domain.usecase.ProcessTransactionUseCase;
+import com.finance.analytics_service.infrastructure.persistence.entity.ExpenseEntity;
+import com.finance.analytics_service.infrastructure.report.ExcelReportGenerator;
+import com.finance.analytics_service.infrastructure.report.PdfReportGenerator;
+import org.springframework.stereotype.Service;
 
-import java.time.LocalDate;
+@Service
+public class AnalysisApplicationService implements ProcessTransactionUseCase, GenerateReportUseCase {
 
-public class AnalysisApplicationService {
+    private final ExpenseRepository expenseRepository;
+    private final ExcelReportGenerator excelReportGenerator;
+    private final PdfReportGenerator pdfReportGenerator;
 
-    private final ProcessTransactionUseCase process;
-    private final GenerateReportUseCase report;
-
-    public AnalysisApplicationService(ProcessTransactionUseCase process,
-                                      GenerateReportUseCase report) {
-        this.process = process;
-        this.report = report;
+    public AnalysisApplicationService(
+            ExpenseRepository expenseRepository,
+            ExcelReportGenerator excelReportGenerator,
+            PdfReportGenerator pdfReportGenerator
+    ) {
+        this.expenseRepository = expenseRepository;
+        this.excelReportGenerator = excelReportGenerator;
+        this.pdfReportGenerator = pdfReportGenerator;
     }
 
-    public void processTransaction(Long userId, String category,
-                                   String type, double amount,
-                                   LocalDate date) {
-        process.execute(userId, category, type, amount, date);
+    @Override
+    public void process(ExpenseEntity expense) {
+        // já está persistido pelo consumer
+        System.out.println("Despesa processada: " + expense.getDescription());
     }
 
-    public GenerateReportUseCase report() {
-        return report;
+    public ExpenseSummary getSummary(Long userId) {
+        return expenseRepository.getSummaryByUser(userId);
+    }
+
+    @Override
+    public byte[] generateExcel(Long userId) {
+        return excelReportGenerator.generate(userId);
+    }
+
+    @Override
+    public byte[] generatePdf(Long userId) {
+        return pdfReportGenerator.generate(userId);
     }
 }
-

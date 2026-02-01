@@ -4,6 +4,24 @@
 🧱 VISÃO GERAL – ARQUITETURA LIMPA
 Princípios que vamos seguir
 
+
+🚨 Regra de ouro pra não quebrar o projeto
+Microsserviço	Porta	Banco	Volume
+user	5432	usersdb	users_db_data
+transaction	5433	transactiondb	transaction_db_data
+analytics	5434	analyticsdb	analytics_db_data
+
+
+
+
+✅ Padrão saudável (pra todos os serviços)
+Serviço	Porta API	Porta Postgres
+user-service	8081	5433
+transaction	8082	5434
+analytics	8083	5435
+
+
+
 ✔ Regra de negócio não depende de Spring
 ✔ Domínio não conhece banco, web, segurança, Excel
 ✔ Frameworks ficam na borda
@@ -198,38 +216,3 @@ http://localhost:84/upload
 
 
 
-👉 Sem isso, Swagger não aparece.
-
-Depois de adicionar:
-
-mvn clean install
-
-git commit -m "validação tokens JWT,"
-
-
-POST /api/auth/register
-Content-Type: application/json
-
-{
-"name": "Maria Silva",
-"email": "maria@email.com",
-"password": "123456",
-"type": "ADMIN"
-}
-
-POST /api/auth/login
-Content-Type: application/json
-
-{
-"email": "maria@email.com",
-"password": "123456"
-}
-
-{
-"token": "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9..."
-}
-
-
-
-
-Exemplo de JSON para criar usuário:

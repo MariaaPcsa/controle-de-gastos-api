@@ -18,9 +18,6 @@ public class CreateUserUseCase {
                     throw new RuntimeException("Email já cadastrado");
                 });
 
-        // Aqui você pode criptografar a senha antes de salvar
-        // user.setPassword(passwordEncoder.encode(user.getPassword()));
-
         return repository.save(user);
     }
 }

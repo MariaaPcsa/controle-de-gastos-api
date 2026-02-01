@@ -1,26 +1,38 @@
 package com.finance.analytics_service.infrastructure.report;
 
-import com.finance.analytics_service.domain.model.ExpenseSummary;
+
+import org.apache.poi.xssf.usermodel.XSSFWorkbook;
+import org.apache.poi.ss.usermodel.Sheet;
+import org.apache.poi.ss.usermodel.Row;
+import org.springframework.stereotype.Component;
 
 import java.io.ByteArrayOutputStream;
-import java.util.List;
+import com.finance.analytics_service.infrastructure.persistence.repository.ExpenseRepositoryJpa;
 
+
+@Component
 public class ExcelReportGenerator {
 
-    public static byte[] generate(List<ExpenseSummary> data) {
-        Workbook wb = new XSSFWorkbook();
-        Sheet sheet = wb.createSheet("Resumo");
+    private final ExpenseRepositoryJpa repository;
 
-        int row = 0;
-        for (ExpenseSummary e : data) {
-            Row r = sheet.createRow(row++);
-            r.createCell(0).setCellValue(e.getCategory());
-            r.createCell(1).setCellValue(e.getTotal().doubleValue());
+    public ExcelReportGenerator(ExpenseRepositoryJpa repository) {
+        this.repository = repository;
+    }
+
+    public byte[] generate(Long userId) {
+        try (XSSFWorkbook workbook = new XSSFWorkbook();
+             ByteArrayOutputStream out = new ByteArrayOutputStream()) {
+
+            var sheet = workbook.createSheet("Relatório");
+            var row = sheet.createRow(0);
+            row.createCell(0).setCellValue("Relatório do Usuário " + userId);
+
+            workbook.write(out);
+            return out.toByteArray();
+        } catch (Exception e) {
+            throw new RuntimeException("Erro ao gerar Excel", e);
         }
-
-        ByteArrayOutputStream out = new ByteArrayOutputStream();
-        wb.write(out);
-        return out.toByteArray();
     }
 }
+
 

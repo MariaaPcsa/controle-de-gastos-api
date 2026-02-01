@@ -1,15 +1,12 @@
 package com.finance.analytics_service.presentation.controller;
 
+
 import com.finance.analytics_service.application.service.AnalysisApplicationService;
 import com.finance.analytics_service.domain.model.ExpenseSummary;
-import com.finance.analytics_service.infrastructure.report.ExcelReportGenerator;
+import org.springframework.http.HttpHeaders;
+import org.springframework.http.MediaType;
 import org.springframework.http.ResponseEntity;
-import org.springframework.web.bind.annotation.GetMapping;
-import org.springframework.web.bind.annotation.PathVariable;
-import org.springframework.web.bind.annotation.RequestMapping;
-import org.springframework.web.bind.annotation.RestController;
-
-import java.util.List;
+import org.springframework.web.bind.annotation.*;
 
 @RestController
 @RequestMapping("/api/analysis")
@@ -22,18 +19,25 @@ public class AnalysisController {
     }
 
     @GetMapping("/summary/{userId}")
-    public List<ExpenseSummary> summary(@PathVariable Long userId) {
-        return service.report().byCategory(userId);
+    public ExpenseSummary summary(@PathVariable Long userId) {
+        return service.getSummary(userId);
     }
 
     @GetMapping("/report/excel/{userId}")
     public ResponseEntity<byte[]> excel(@PathVariable Long userId) {
-
-        var data = service.report().byCategory(userId);
-        byte[] file = ExcelReportGenerator.generate(data);
-
+        byte[] file = service.generateExcel(userId);
         return ResponseEntity.ok()
-                .header("Content-Disposition", "attachment; filename=report.xlsx")
+                .header(HttpHeaders.CONTENT_DISPOSITION, "attachment; filename=relatorio.xlsx")
+                .contentType(MediaType.APPLICATION_OCTET_STREAM)
+                .body(file);
+    }
+
+    @GetMapping("/report/pdf/{userId}")
+    public ResponseEntity<byte[]> pdf(@PathVariable Long userId) {
+        byte[] file = service.generatePdf(userId);
+        return ResponseEntity.ok()
+                .header(HttpHeaders.CONTENT_DISPOSITION, "attachment; filename=relatorio.pdf")
+                .contentType(MediaType.APPLICATION_PDF)
                 .body(file);
     }
 }

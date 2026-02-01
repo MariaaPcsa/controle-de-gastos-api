@@ -1,0 +1,28 @@
+version: "3.9"
+
+services:
+  postgres-analytics:
+    image: postgres:14
+    container_name: postgres-analytics
+    restart: always
+    environment:
+      POSTGRES_DB: analyticsdb
+      POSTGRES_USER: postgres
+      POSTGRES_PASSWORD: postgres
+    ports:
+      - "5434:5432"
+    volumes:
+      - analytics_db_data:/var/lib/postgresql/data
+
+  analytics-service:
+    build: .
+    container_name: analytics-service
+    ports:
+      - "8083:8080"
+    environment:
+      SPRING_PROFILES_ACTIVE: prod
+    depends_on:
+      - postgres-analytics
+
+volumes:
+  analytics_db_data:

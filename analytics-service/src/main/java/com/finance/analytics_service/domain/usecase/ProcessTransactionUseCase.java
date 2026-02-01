@@ -2,22 +2,11 @@ package com.finance.analytics_service.domain.usecase;
 
 
 
-import java.time.LocalDate;
+import com.finance.analytics_service.infrastructure.persistence.entity.ExpenseEntity;
 
-public class ProcessTransactionUseCase {
+public interface ProcessTransactionUseCase {
 
-    private final ExpenseRepository repository;
+    void process(ExpenseEntity expense);
 
-    public ProcessTransactionUseCase(ExpenseRepository repository) {
-        this.repository = repository;
-    }
-
-    public void execute(Long userId, String category, String type,
-                        double amount, LocalDate date) {
-
-        if (type.equals("DEPOSIT")) return; // regra de negócio
-
-        repository.save(userId, category, type, amount, date);
-    }
 }
 

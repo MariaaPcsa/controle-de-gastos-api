@@ -1,15 +1,20 @@
 //package com.finance.transaction_service.infrastructure.kafka;
 //
+//import com.finance.transaction_service.presentation.dto.TransactionResponseDTO;
+//import org.springframework.kafka.core.KafkaTemplate;
+//import org.springframework.stereotype.Service;
+//
 //@Service
 //public class TransactionProducer {
 //
-//    private final KafkaTemplate<String, TransactionResponseDTO> kafka;
+//    private final KafkaTemplate<String, TransactionResponseDTO> kafkaTemplate;
 //
-//    public TransactionProducer(KafkaTemplate<String, TransactionResponseDTO> kafka) {
-//        this.kafka = kafka;
+//    public TransactionProducer(KafkaTemplate<String, TransactionResponseDTO> kafkaTemplate) {
+//        this.kafkaTemplate = kafkaTemplate;
 //    }
 //
 //    public void publish(TransactionResponseDTO dto) {
-//        kafka.send("transactions-topic", dto);
+//        kafkaTemplate.send("transactions-topic", dto);
 //    }
 //}
+

@@ -2,17 +2,17 @@ version: '3.8'
 
 services:
   db:
-    image: postgres:14           # imagem oficial do PostgreSQL
+    image: postgres:14
     container_name: usersdb
     restart: always
     environment:
-      POSTGRES_USER: postgres       # usuário do banco
-      POSTGRES_PASSWORD: maria  # senha do banco
-      POSTGRES_DB: usersdb    # nome do banco
+      POSTGRES_USER: postgres
+      POSTGRES_PASSWORD: maria
+      POSTGRES_DB: usersdb
     ports:
-      - "8081:5432"              # porta 8081 no host -> 5432 no container
+      - "5432:5432"
     volumes:
-      - db_data:/var/lib/postgresql/data  # mantém os dados
+      - db_data:/var/lib/postgresql/data
 
 volumes:
   db_data:
