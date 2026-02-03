@@ -1,20 +1,16 @@
 package com.maria.finance.user.presentation.dto;
 
 import com.maria.finance.user.domain.model.User;
-import com.maria.finance.user.domain.model.UserType;
 
-public record UserRequestDTO(
+public record UserUpdateDTO(
         String name,
-        String email,
-        String password,
-        UserType type
+        String email
 ) {
+    // Converte o DTO para um objeto User parcial (apenas com os campos que podem ser alterados)
     public User toDomain() {
         User user = new User();
         user.setName(this.name);
         user.setEmail(this.email);
-        user.setPassword(this.password);
-        user.setType(this.type);
         return user;
     }
 }

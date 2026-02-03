@@ -11,6 +11,7 @@ public class User {
     private UserType type;
     private LocalDateTime createdAt;
 
+    // 🔹 Construtor principal
     public User(Long id, String name, String email, String password, UserType type) {
         this.id = id;
         this.name = name;
@@ -20,11 +21,17 @@ public class User {
         this.createdAt = LocalDateTime.now();
     }
 
+    // 🔹 Construtor vazio (necessário para frameworks como JPA)
+    public User() {
+        this.createdAt = LocalDateTime.now();
+    }
+
+    // 🔹 Método de verificação de administrador
     public boolean isAdmin() {
         return this.type == UserType.ADMIN;
     }
 
-    // 🔹 GETTERS (OBRIGATÓRIOS)
+    // 🔹 GETTERS
     public Long getId() {
         return id;
     }
@@ -49,7 +56,7 @@ public class User {
         return createdAt;
     }
 
-    // 🔹 SETTERS (use com cuidado)
+    // 🔹 SETTERS
     public void setName(String name) {
         this.name = name;
     }
@@ -64,5 +71,13 @@ public class User {
 
     public void setType(UserType type) {
         this.type = type;
+    }
+
+    // 🔹 Método auxiliar para atualizar dados parcialmente
+    public void update(User updatedData) {
+        if (updatedData.getName() != null) this.name = updatedData.getName();
+        if (updatedData.getEmail() != null) this.email = updatedData.getEmail();
+        if (updatedData.getPassword() != null) this.password = updatedData.getPassword();
+        if (updatedData.getType() != null) this.type = updatedData.getType();
     }
 }

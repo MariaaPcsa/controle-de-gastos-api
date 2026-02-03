@@ -24,7 +24,17 @@ Este módulo será responsável pela gestão de **usuários** da aplicação, in
 
 | PUT | `/api/users/{id}` | Atualizar usuário |
 
+Quando alguém faz um POST ou PUT para criar/atualizar um usuário:
+
+{
+"name": "Maria Silva",
+"email": "maria@email.com",
+"password": "123456",
+"type": "USER"
+
 | DELETE | `/api/users/{id}` | Remover usuário |
 
 
 Documentação: http://localhost:8080/swagger-ui/index.html
+
+
