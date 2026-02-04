@@ -20,6 +20,7 @@ public class UserController {
         this.service = service;
     }
 
+    // 🔒 ADMIN: lista todos | USER: lista só ele mesmo
     @GetMapping
     public List<UserResponseDTO> list(@AuthenticationPrincipal User user) {
         return service.list(user)
@@ -28,13 +29,28 @@ public class UserController {
                 .toList();
     }
 
+    // 🔒 ADMIN: pode buscar qualquer ID | USER: só o próprio ID
+    @GetMapping("/{id}")
+    public ResponseEntity<UserResponseDTO> findById(
+            @PathVariable Long id,
+            @AuthenticationPrincipal User user) {
+
+        User found = service.findById(id, user);
+        return ResponseEntity.ok(UserResponseDTO.fromDomain(found));
+    }
+
+    // 🔒 ADMIN: pode deletar | USER: não pode
     @DeleteMapping("/{id}")
-    public ResponseEntity<Void> delete(@PathVariable Long id,
-                                       @AuthenticationPrincipal User user) {
+    public ResponseEntity<Void> delete(
+            @PathVariable Long id,
+            @AuthenticationPrincipal User user) {
+
         service.delete(id, user);
         return ResponseEntity.noContent().build();
     }
 
+    // 🔒 ADMIN: atualiza qualquer usuário
+    // 🔒 USER: só pode atualizar ele mesmo
     @PutMapping("/{id}")
     public ResponseEntity<UserResponseDTO> update(
             @PathVariable Long id,

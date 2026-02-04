@@ -3,39 +3,58 @@ package com.maria.finance.user.infrastructure.persistence.entity;
 import com.maria.finance.user.domain.model.UserType;
 import jakarta.persistence.*;
 
+import java.time.LocalDateTime;
+
 @Entity
 @Table(name = "users")
 public class UserEntity {
 
     @Id
-    @GeneratedValue
+    @GeneratedValue(strategy = GenerationType.IDENTITY)
     private Long id;
 
+    @Column(nullable = false, length = 150)
     private String name;
+
+    @Column(nullable = false, unique = true, length = 150)
     private String email;
+
+    @Column(nullable = false)
     private String password;
 
     @Enumerated(EnumType.STRING)
+    @Column(nullable = false)
     private UserType type;
 
-    // 🔹 CONSTRUTOR PADRÃO (OBRIGATÓRIO PARA JPA)
-    public UserEntity() {
+    @Column(nullable = false)
+    private Boolean active;
+
+    @Column(nullable = false, updatable = false)
+    private LocalDateTime createdAt;
+
+    @Column(nullable = false)
+    private LocalDateTime updatedAt;
+
+    // ✅ Construtor padrão (JPA)
+    public UserEntity() {}
+
+    // ✅ Hook automático antes de salvar
+    @PrePersist
+    public void prePersist() {
+        this.createdAt = LocalDateTime.now();
+        this.updatedAt = LocalDateTime.now();
+        if (this.active == null) {
+            this.active = true;
+        }
     }
 
-    // 🔹 CONSTRUTOR DE CONVENIÊNCIA
-    public UserEntity(Long id, String name, String email, String password, UserType type) {
-        this.id = id;
-        this.name = name;
-        this.email = email;
-        this.password = password;
-        this.type = type;
+    // ✅ Hook automático antes de atualizar
+    @PreUpdate
+    public void preUpdate() {
+        this.updatedAt = LocalDateTime.now();
+    }
 
-
-    // getters e setters
-}
-
-
-    // getters e setters
+    // GETTERS E SETTERS
     public Long getId() { return id; }
     public void setId(Long id) { this.id = id; }
 
@@ -50,4 +69,10 @@ public class UserEntity {
 
     public UserType getType() { return type; }
     public void setType(UserType type) { this.type = type; }
+
+    public Boolean getActive() { return active; }
+    public void setActive(Boolean active) { this.active = active; }
+
+    public LocalDateTime getCreatedAt() { return createdAt; }
+    public LocalDateTime getUpdatedAt() { return updatedAt; }
 }

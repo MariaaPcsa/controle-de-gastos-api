@@ -28,14 +28,18 @@ public class UserExcelImporter {
             Sheet sheet = workbook.getSheetAt(0);
 
             for (Row row : sheet) {
-                if (row.getRowNum() == 0) continue; // pula cabeçalho
+                if (row.getRowNum() == 0) continue;
 
-                String name = row.getCell(0).getStringCellValue();
-                String email = row.getCell(1).getStringCellValue();
-                String password = row.getCell(2).getStringCellValue();
+                String name = row.getCell(0).getStringCellValue().trim();
+                String email = row.getCell(1).getStringCellValue().trim();
+                String password = row.getCell(2).getStringCellValue().trim();
+
+                if (name.isBlank() || email.isBlank() || password.isBlank()) {
+                    continue;
+                }
 
                 User user = new User(
-                        null,
+                        (Long) null,   // ou use o construtor sem id
                         name,
                         email,
                         password,

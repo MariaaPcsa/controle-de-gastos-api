@@ -7,6 +7,7 @@ import com.maria.finance.user.domain.repository.UserRepository;
 import org.springframework.boot.CommandLineRunner;
 import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.stereotype.Component;
+import org.springframework.web.bind.annotation.RestController;
 
 @Component
 public class AdminInitializer implements CommandLineRunner {
@@ -18,7 +19,7 @@ public class AdminInitializer implements CommandLineRunner {
         this.userRepository = userRepository;
         this.passwordEncoder = passwordEncoder;
     }
-//
+//@RestController
     @Override
     public void run(String... args) {
         String adminEmail = "admin@finance.com";

@@ -51,3 +51,4 @@ public class UserRepositoryJpaAdapter implements UserRepository {
     }
 }
 
+
