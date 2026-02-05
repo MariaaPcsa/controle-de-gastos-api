@@ -13,13 +13,12 @@ public class FindUserByIdUseCase {
 
     public User execute(Long id, User requester) {
 
-        User found = repository.findById(id)
-                .orElseThrow(() -> new RuntimeException("Usuário não encontrado"));
-
-        if (!requester.isAdmin() && !found.getId().equals(requester.getId())) {
+        // 🔒 USER só pode acessar o próprio ID
+        if (!requester.isAdmin() && !requester.getId().equals(id)) {
             throw new RuntimeException("Você não tem permissão para acessar este usuário");
         }
 
-        return found;
+        return repository.findById(id)
+                .orElseThrow(() -> new RuntimeException("Usuário não encontrado"));
     }
 }

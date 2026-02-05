@@ -73,4 +73,6 @@ public class JwtService {
         return userService.findByEmail(email)
                 .orElseThrow(() -> new RuntimeException("Usuário do token não encontrado"));
     }
+
+
 }

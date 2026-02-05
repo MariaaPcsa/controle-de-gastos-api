@@ -1,6 +1,5 @@
 package com.maria.finance.user.domain.usecase;
 
-
 import com.maria.finance.user.domain.model.User;
 import com.maria.finance.user.domain.repository.UserRepository;
 
@@ -12,19 +11,21 @@ public class UpdateUserUseCase {
         this.repository = repository;
     }
 
-    public User execute(Long targetId, User updatedData, User requester) {
+    public User execute(Long id, User userData, User requester) {
 
-        User existing = repository.findById(targetId)
+        User existing = repository.findById(id)
                 .orElseThrow(() -> new RuntimeException("Usuário não encontrado"));
 
-        if (!requester.isAdmin() && !requester.getId().equals(targetId)) {
-            throw new RuntimeException("Usuário não autorizado");
+        // 🔒 USER só pode atualizar a si mesmo
+        if (!requester.isAdmin() && !existing.getId().equals(requester.getId())) {
+            throw new RuntimeException("Você não tem permissão para atualizar este usuário");
         }
 
-        existing.setName(updatedData.getName());
-        existing.setEmail(updatedData.getEmail());
+        existing.setName(userData.getName());
+        existing.setEmail(userData.getEmail());
+        existing.setPassword(userData.getPassword());
+        existing.setType(userData.getType());
 
         return repository.save(existing);
     }
 }
-

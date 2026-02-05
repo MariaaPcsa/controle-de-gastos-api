@@ -27,48 +27,37 @@ public class UserApplicationService {
         this.findById = new FindUserByIdUseCase(repository);
     }
 
-    // 🔹 CREATE
     public User create(User user) {
         return create.execute(user);
     }
 
-    // 🔹 LIST
     public List<User> list(User requester) {
         return list.execute(requester);
     }
 
-    // 🔹 FIND BY ID (delegando pro UseCase)
     public User findById(Long id, User requester) {
         return findById.execute(id, requester);
     }
 
-    // 🔹 DELETE
     public void delete(Long id, User requester) {
         delete.execute(id, requester);
     }
 
-    // 🔹 UPDATE
     public User update(Long id, User userData, User requester) {
         return update.execute(id, userData, requester);
     }
 
-    // 🔹 FIND BY EMAIL
     public Optional<User> findByEmail(String email) {
         return findByEmail.execute(email);
     }
 
-    // 🔹 CREATE OR UPDATE (IMPORTAÇÃO EXCEL)
     public User createOrUpdate(User user, User requester) {
         if (!requester.isAdmin()) {
             throw new RuntimeException("Apenas ADMIN pode importar usuários");
         }
 
-        Optional<User> existing = findByEmail(user.getEmail());
-
-        if (existing.isPresent()) {
-            return update(existing.get().getId(), user, requester);
-        }
-
-        return create(user);
+        return findByEmail(user.getEmail())
+                .map(existing -> update(existing.getId(), user, requester))
+                .orElseGet(() -> create(user));
     }
 }

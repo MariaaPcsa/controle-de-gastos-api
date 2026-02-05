@@ -2,40 +2,41 @@ package com.maria.finance.user.infrastructure.security;
 
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
-import org.springframework.security.config.Customizer;
 import org.springframework.security.config.annotation.web.configuration.EnableWebSecurity;
 import org.springframework.security.config.annotation.web.builders.HttpSecurity;
 import org.springframework.security.web.SecurityFilterChain;
+import org.springframework.security.web.authentication.UsernamePasswordAuthenticationFilter;
 
 @Configuration
 @EnableWebSecurity
 public class SecurityConfig {
 
+    private final JwtAuthenticationFilter jwtFilter;
+
+    public SecurityConfig(JwtAuthenticationFilter jwtFilter) {
+        this.jwtFilter = jwtFilter;
+    }
+
     @Bean
     public SecurityFilterChain filterChain(HttpSecurity http) throws Exception {
         http
-                .csrf(csrf -> csrf.disable())  // aqui é a forma nova
+                .csrf(csrf -> csrf.disable())
                 .authorizeHttpRequests(auth -> auth
-                        .requestMatchers("/**").permitAll() // libera todas as rotas
+                        // 🔓 SWAGGER LIBERADO
+                        .requestMatchers(
+                                "/v3/api-docs/**",
+                                "/swagger-ui.html",
+                                "/swagger-ui/**"
+                        ).permitAll()
+
+                        // 🔓 AUTH LIBERADO
+                        .requestMatchers("/api/auth/**").permitAll()
+
+                        // 🔒 RESTANTE PROTEGIDO
+                        .anyRequest().authenticated()
                 )
-                .httpBasic(Customizer.withDefaults()); // opcional, só para testes
+                .addFilterBefore(jwtFilter, UsernamePasswordAuthenticationFilter.class);
+
         return http.build();
     }
-
-
-//                .csrf(csrf -> csrf.disable()) // desativa CSRF
-//                .authorizeHttpRequests(auth -> auth
-//                        // 🔓 Endpoints públicos: login e registro
-//                        .requestMatchers("/auth/login", "/auth/register").permitAll()
-//
-//                        // 🔓 Swagger
-//                        .requestMatchers("/swagger-ui.html", "/swagger-ui/**", "/v3/api-docs/**").permitAll()
-//
-//                        // 🔒 resto da API protegido
-//                        .anyRequest().authenticated()
-//                )
-//                .httpBasic(); // login básico para endpoints protegidos
-
-//        return http.build();
-    }
-
+}
