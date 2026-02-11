@@ -1,7 +1,6 @@
 package com.maria.finance.user.infrastructure.security;
 
 import com.maria.finance.user.domain.repository.UserRepository;
-import com.maria.finance.user.domain.model.User;
 import jakarta.servlet.FilterChain;
 import jakarta.servlet.ServletException;
 import jakarta.servlet.http.HttpServletRequest;
@@ -29,7 +28,8 @@ public class JwtAuthenticationFilter extends OncePerRequestFilter {
         String path = request.getRequestURI();
         return path.startsWith("/v3/api-docs")
                 || path.startsWith("/swagger-ui")
-                || path.startsWith("/swagger-ui.html")
+                || path.startsWith("/swagger-resources")
+                || path.startsWith("/webjars")
                 || path.startsWith("/api/auth");
     }
 
@@ -47,55 +47,26 @@ public class JwtAuthenticationFilter extends OncePerRequestFilter {
             if (jwtService.validateToken(token)) {
                 String email = jwtService.getEmailFromToken(token);
 
-                User user = userRepository.findByEmail(email).orElse(null);
+                userRepository.findByEmail(email).ifPresent(user -> {
 
-                if (user != null) {
+                    if (!Boolean.TRUE.equals(user.getActive())) {
+                        return;
+                    }
+
+                    UserDetailsAdapter userDetails = new UserDetailsAdapter(user);
+
                     UsernamePasswordAuthenticationToken auth =
-                            new UsernamePasswordAuthenticationToken(user, null, null);
+                            new UsernamePasswordAuthenticationToken(
+                                    userDetails,
+                                    null,
+                                    userDetails.getAuthorities()
+                            );
 
                     SecurityContextHolder.getContext().setAuthentication(auth);
-                }
+                });
             }
         }
 
         filterChain.doFilter(request, response);
     }
 }
-
-
-
-//@Component
-//public class JwtAuthenticationFilter extends OncePerRequestFilter {
-//
-//    private final JwtService jwtService;
-//    private final UserRepository userRepository;
-//
-//    public JwtAuthenticationFilter(JwtService jwtService, UserRepository userRepository) {
-//        this.jwtService = jwtService;
-//        this.userRepository = userRepository;
-//    }
-//
-//    @Override
-//    protected void doFilterInternal(HttpServletRequest request,
-//                                    HttpServletResponse response,
-//                                    FilterChain filterChain)
-//            throws ServletException, IOException {
-//
-//        String authHeader = request.getHeader("Authorization");
-//        if (authHeader != null && authHeader.startsWith("Bearer ")) {
-//            String token = authHeader.substring(7);
-//            if (jwtService.validateToken(token)) {
-//                String email = jwtService.getEmailFromToken(token);
-//                User user = userRepository.findByEmail(email)
-//                        .orElse(null);
-//                if (user != null) {
-//                    UsernamePasswordAuthenticationToken authToken =
-//                            new UsernamePasswordAuthenticationToken(user, null, null);
-//                    SecurityContextHolder.getContext().setAuthentication(authToken);
-//                }
-//            }
-//        }
-//
-//        filterChain.doFilter(request, response);
-//    }
-//}

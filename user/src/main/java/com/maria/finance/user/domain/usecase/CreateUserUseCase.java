@@ -11,6 +11,12 @@ public class CreateUserUseCase {
         this.repository = repository;
     }
 
+    private void validateEmail(String email) {
+        if (email == null || !email.matches("^[^@\\s]+@[^@\\s]+\\.[^@\\s]+$")) {
+            throw new RuntimeException("Email inválido");
+        }
+    }
+
     public User execute(User user) {
         // Verifica se o email já existe
         repository.findByEmail(user.getEmail())
@@ -20,5 +26,6 @@ public class CreateUserUseCase {
 
         return repository.save(user);
     }
+
 }
 

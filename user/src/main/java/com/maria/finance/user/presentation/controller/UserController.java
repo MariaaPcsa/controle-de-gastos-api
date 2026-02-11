@@ -2,15 +2,26 @@ package com.maria.finance.user.presentation.controller;
 
 import com.maria.finance.user.application.service.UserApplicationService;
 import com.maria.finance.user.domain.model.User;
+import com.maria.finance.user.domain.model.UserType;
 import com.maria.finance.user.infrastructure.security.JwtService;
 import com.maria.finance.user.presentation.dto.UserRequestDTO;
 import com.maria.finance.user.presentation.dto.UserResponseDTO;
+import jakarta.validation.Valid;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
 
-import java.util.List;
+import io.swagger.v3.oas.annotations.Operation;
+import io.swagger.v3.oas.annotations.security.SecurityRequirement;
+import io.swagger.v3.oas.annotations.tags.Tag;
+import org.springframework.web.bind.annotation.*;
 
+import java.util.List;
+import java.util.Map;
+
+
+@Tag(name = "Users", description = "Endpoints de usuários")
 @RestController
+@SecurityRequirement(name = "bearerAuth")
 @RequestMapping("/api/users")
 public class UserController {
 
@@ -25,16 +36,15 @@ public class UserController {
     // 🔒 ADMIN: pode buscar qualquer ID | USER: só o próprio ID
     @GetMapping("/{id}")
     public ResponseEntity<UserResponseDTO> findById(
-            @PathVariable("id") Long id,
+            @PathVariable Long id,
             @RequestHeader("Authorization") String authHeader
     ) {
         User requester = jwt.getUserFromHeader(authHeader);
-
         User found = service.findById(id, requester);
         return ResponseEntity.ok(UserResponseDTO.fromDomain(found));
     }
 
-    // 🔒 ADMIN: lista todos | USER: só ele mesmo
+    @Operation(summary = "Listar usuários")
     @GetMapping
     public ResponseEntity<List<UserResponseDTO>> list(
             @RequestHeader("Authorization") String authHeader
@@ -49,9 +59,10 @@ public class UserController {
         return ResponseEntity.ok(response);
     }
 
+    @Operation(summary = "Delete usuários")
     @DeleteMapping("/{id}")
     public ResponseEntity<Void> delete(
-            @PathVariable("id") Long id,
+            @PathVariable Long id,
             @RequestHeader("Authorization") String authHeader
     ) {
         User requester = jwt.getUserFromHeader(authHeader);
@@ -59,25 +70,40 @@ public class UserController {
         return ResponseEntity.noContent().build();
     }
 
-    // 🔒 ADMIN: atualiza qualquer usuário
-// 🔒 USER: só pode atualizar ele mesmo
+    @Operation(summary = "Atualizar usuários")
     @PutMapping("/{id}")
     public ResponseEntity<UserResponseDTO> update(
-            @PathVariable("id") Long id,
-            @RequestBody UserRequestDTO dto,
+            @PathVariable Long id,
+            @Valid @RequestBody UserRequestDTO dto,
             @RequestHeader("Authorization") String authHeader
     ) {
         User requester = jwt.getUserFromHeader(authHeader);
 
-        User updated = service.update(
-                id,
-                new User(id, dto.name(), dto.email(), dto.password(), dto.type()),
-                requester
-        );
+        User data = new User();
+        data.setName(dto.name());
+        data.setEmail(dto.email());
+        data.setPassword(dto.password());
+        data.setType(dto.type());
+
+        User updated = service.update(id, data, requester);
 
         return ResponseEntity.ok(UserResponseDTO.fromDomain(updated));
     }
+
+    @Operation(summary = "Atualizar usuários somente ADMIN")
+    @PatchMapping("/{id}/role")
+    public ResponseEntity<UserResponseDTO> updateRole(
+            @PathVariable Long id,
+            @RequestBody Map<String, String> body,
+            @RequestHeader("Authorization") String authHeader
+    ) {
+        User requester = jwt.getUserFromHeader(authHeader);
+
+        UserType newType = UserType.valueOf(body.get("type").toUpperCase());
+
+        User updated = service.updateRole(id, newType, requester);
+        return ResponseEntity.ok(UserResponseDTO.fromDomain(updated));
+    }
+
+
 }
-
-
-

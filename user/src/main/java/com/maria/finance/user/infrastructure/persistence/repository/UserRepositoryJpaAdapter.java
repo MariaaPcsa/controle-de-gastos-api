@@ -1,6 +1,9 @@
-package com.maria.finance.user.domain.repository;
+package com.maria.finance.user.infrastructure.persistence.repository;
+
+
 
 import com.maria.finance.user.domain.model.User;
+import com.maria.finance.user.domain.repository.UserRepository;
 import com.maria.finance.user.infrastructure.persistence.entity.UserEntity;
 import com.maria.finance.user.infrastructure.persistence.mapper.UserMapper;
 import com.maria.finance.user.infrastructure.persistence.repository.UserRepositoryJpa;
@@ -45,10 +48,12 @@ public class UserRepositoryJpaAdapter implements UserRepository {
                 .toList();
     }
 
-    @Override
+    // DELETE LÓGICO (ok manter aqui)
     public void delete(User user) {
-        jpaRepository.deleteById(user.getId());
+        UserEntity entity = jpaRepository.findById(user.getId())
+                .orElseThrow(() -> new RuntimeException("Usuário não encontrado no banco"));
+
+        entity.setActive(false);
+        jpaRepository.save(entity);
     }
 }
-
-

@@ -1,25 +1,27 @@
 package com.maria.finance.user.domain.usecase;
 
 import com.maria.finance.user.domain.model.User;
+import com.maria.finance.user.domain.model.UserType;
 import com.maria.finance.user.domain.repository.UserRepository;
 
-public class DeleteUserUseCase {
+public class UpdateUserRoleUseCase {
 
     private final UserRepository repository;
 
-    public DeleteUserUseCase(UserRepository repository) {
+    public UpdateUserRoleUseCase(UserRepository repository) {
         this.repository = repository;
     }
 
-    public void execute(Long id, User requester) {
+    public User updateRole(Long id, UserType newType, User requester) {
         if (!requester.isAdmin()) {
-            throw new RuntimeException("Apenas ADMIN pode deletar usuários");
+            throw new RuntimeException("Apenas ADMIN pode alterar o tipo do usuário");
         }
 
         User user = repository.findById(id)
                 .orElseThrow(() -> new RuntimeException("Usuário não encontrado"));
 
-        user.setActive(false);     // ✅ delete lógico
-        repository.save(user);    // ✅ persiste a desativação
+        user.setType(newType); // ✅ só muda o role
+
+        return repository.save(user);
     }
 }

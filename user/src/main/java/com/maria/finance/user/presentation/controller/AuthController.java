@@ -2,9 +2,11 @@ package com.maria.finance.user.presentation.controller;
 
 import com.maria.finance.user.application.service.UserApplicationService;
 import com.maria.finance.user.domain.model.User;
+import com.maria.finance.user.domain.model.UserType;
 import com.maria.finance.user.infrastructure.security.JwtService;
+import com.maria.finance.user.presentation.dto.AuthRequestDTO;
+import com.maria.finance.user.presentation.dto.AuthResponseDTO;
 import com.maria.finance.user.presentation.dto.JwtResponseDTO;
-import com.maria.finance.user.presentation.dto.LoginDTO;
 import com.maria.finance.user.presentation.dto.UserRequestDTO;
 import com.maria.finance.user.presentation.dto.UserResponseDTO;
 import io.swagger.v3.oas.annotations.Parameter;
@@ -27,9 +29,10 @@ public class AuthController {
         this.passwordEncoder = passwordEncoder;
     }
 
-    // ✅ REGISTER
+    // ✅ REGISTER → SEMPRE USER
     @PostMapping("/register")
     public ResponseEntity<UserResponseDTO> register(@RequestBody UserRequestDTO dto) {
+
         String hashedPassword = passwordEncoder.encode(dto.password());
 
         User user = new User(
@@ -37,64 +40,32 @@ public class AuthController {
                 dto.name(),
                 dto.email(),
                 hashedPassword,
-                dto.type()
+                UserType.USER
         );
 
         User created = service.create(user);
         return ResponseEntity.ok(UserResponseDTO.fromDomain(created));
     }
 
-    // ✅ LOGIN
     @PostMapping("/login")
-    public ResponseEntity<JwtResponseDTO> login(@RequestBody LoginDTO dto) {
-        User user = service.findByEmail(dto.email())
-                .orElseThrow(() -> new RuntimeException("Usuário não encontrado"));
+    public ResponseEntity<JwtResponseDTO> login(@RequestBody AuthRequestDTO request) {
 
-        if (!passwordEncoder.matches(dto.password(), user.getPassword())) {
-            throw new RuntimeException("Senha inválida");
+        User user = service.findByEmail(request.getEmail())
+                .orElseThrow(() -> new RuntimeException("Credenciais inválidas"));
+
+        // 🔒 BLOQUEIA USUÁRIO INATIVO
+        if (!Boolean.TRUE.equals(user.getActive())) {
+            throw new RuntimeException("Usuário desativado. Acesso bloqueado.");
+        }
+
+        if (!passwordEncoder.matches(request.getPassword(), user.getPassword())) {
+            throw new RuntimeException("Credenciais inválidas");
         }
 
         String token = jwt.generateToken(user);
+
         return ResponseEntity.ok(new JwtResponseDTO(token));
     }
 
-    // ✅ UPDATE (com JWT no header)
-    @PutMapping("/{id}")
-    public ResponseEntity<UserResponseDTO> update(
-            @PathVariable Long id,
-            @RequestBody UserRequestDTO dto,
-            @Parameter(hidden = true)
-            @RequestHeader("Authorization") String authHeader
-    ) {
-        User requester = jwt.getUserFromHeader(authHeader);
 
-        String hashedPassword = passwordEncoder.encode(dto.password());
-
-        User updatedUser = service.update(
-                id,
-                new User(id, dto.name(), dto.email(), hashedPassword, dto.type()),
-                requester
-        );
-
-        return ResponseEntity.ok(UserResponseDTO.fromDomain(updatedUser));
-    }
-
-    // ✅ DELETE (com JWT no header)
-    @DeleteMapping("/{id}")
-    public ResponseEntity<Void> delete(
-            @PathVariable Long id,
-            @Parameter(hidden = true)
-            @RequestHeader("Authorization") String authHeader
-    ) {
-        User requester = jwt.getUserFromHeader(authHeader);
-        service.delete(id, requester);
-        return ResponseEntity.noContent().build();
-    }
-
-    // ✅ UPLOAD (opcional)
-    @PostMapping("/upload")
-    public ResponseEntity<String> uploadFile(@RequestParam("file") MultipartFile file) {
-        String filename = file.getOriginalFilename();
-        return ResponseEntity.ok("Arquivo recebido: " + filename);
-    }
 }

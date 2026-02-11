@@ -1,6 +1,7 @@
 package com.maria.finance.user.infrastructure.exception;
 
 
+import org.springframework.dao.DataIntegrityViolationException;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.ExceptionHandler;
 import org.springframework.web.bind.annotation.RestControllerAdvice;
@@ -17,4 +18,9 @@ public class GlobalExceptionHandler {
     public ResponseEntity<?> handleRuntime(RuntimeException ex) {
         return ResponseEntity.status(400).body(ex.getMessage());
     }
+    @ExceptionHandler(DataIntegrityViolationException.class)
+    public ResponseEntity<?> handleDuplicate(DataIntegrityViolationException ex) {
+        return ResponseEntity.status(409).body("Email já cadastrado");
+    }
+
 }

@@ -2,6 +2,7 @@ package com.maria.finance.user.domain.usecase;
 
 import com.maria.finance.user.domain.model.User;
 import com.maria.finance.user.domain.repository.UserRepository;
+import com.maria.finance.user.infrastructure.exception.ResourceNotFoundException;
 
 public class FindUserByIdUseCase {
 
@@ -12,13 +13,14 @@ public class FindUserByIdUseCase {
     }
 
     public User execute(Long id, User requester) {
+        User user = repository.findById(id)
+                .orElseThrow(() -> new ResourceNotFoundException("Usuário não encontrado"));
 
-        // 🔒 USER só pode acessar o próprio ID
-        if (!requester.isAdmin() && !requester.getId().equals(id)) {
-            throw new RuntimeException("Você não tem permissão para acessar este usuário");
+        if (!user.isActive()) {
+            throw new RuntimeException("Usuário está desativado");
         }
 
-        return repository.findById(id)
-                .orElseThrow(() -> new RuntimeException("Usuário não encontrado"));
+        return user;
     }
+
 }

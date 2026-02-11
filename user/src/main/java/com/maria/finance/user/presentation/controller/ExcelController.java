@@ -8,8 +8,11 @@ import io.swagger.v3.oas.annotations.Operation;
 import io.swagger.v3.oas.annotations.media.Content;
 import io.swagger.v3.oas.annotations.media.Schema;
 import io.swagger.v3.oas.annotations.responses.ApiResponse;
+import io.swagger.v3.oas.annotations.security.SecurityRequirement;
+import io.swagger.v3.oas.annotations.tags.Tag;
 import org.apache.poi.ss.usermodel.*;
 import org.apache.poi.xssf.usermodel.XSSFWorkbook;
+import org.springframework.dao.DataIntegrityViolationException;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.security.crypto.password.PasswordEncoder;
@@ -21,7 +24,9 @@ import java.util.ArrayList;
 import java.util.List;
 
 @RestController
+@Tag(name = "Users", description = "Endpoints de usuários")
 @RequestMapping("/api/excel")
+@SecurityRequirement(name = "bearerAuth")
 public class ExcelController {
 
     private final UserApplicationService userService;
@@ -39,26 +44,20 @@ public class ExcelController {
     @PostMapping("/upload")
     @Operation(
             summary = "Importar usuários via Excel",
-            description = "Recebe um arquivo Excel (.xlsx) e importa os usuários no banco. Apenas ADMIN pode acessar.",
+            description = "Importa usuários a partir de um Excel (.xlsx). Apenas ADMIN.",
             requestBody = @io.swagger.v3.oas.annotations.parameters.RequestBody(
                     content = @Content(
                             mediaType = "multipart/form-data",
                             schema = @Schema(type = "string", format = "binary")
                     )
-            ),
-            responses = {
-                    @ApiResponse(responseCode = "200", description = "Usuários importados com sucesso"),
-                    @ApiResponse(responseCode = "400", description = "Erro no envio do arquivo"),
-                    @ApiResponse(responseCode = "403", description = "Apenas ADMIN pode importar")
-            }
+            )
     )
     public ResponseEntity<?> uploadExcel(
             @RequestParam("file") MultipartFile file,
             @RequestHeader("Authorization") String authHeader
     ) {
         if (file.isEmpty()) {
-            return ResponseEntity.status(HttpStatus.BAD_REQUEST)
-                    .body("Nenhum arquivo enviado.");
+            return ResponseEntity.badRequest().body("Nenhum arquivo enviado.");
         }
 
         User requester = jwtService.getUserFromHeader(authHeader);
@@ -79,27 +78,31 @@ public class ExcelController {
                 if (row.getRowNum() == 0) continue; // pula header
 
                 try {
-                    String name = getCellValue(row.getCell(0));
-                    String email = getCellValue(row.getCell(1));
-                    String rawPassword = getCellValue(row.getCell(2));
-                    String typeStr = getCellValue(row.getCell(3));
+                    String email = getCellValue(row.getCell(0)); // Email
+                    String name = getCellValue(row.getCell(1));  // Nome
+                    String rawPassword = getCellValue(row.getCell(2)); // Senha
 
-                    if (name.isBlank() || email.isBlank() || rawPassword.isBlank()) {
-                        report.add("Linha " + row.getRowNum() + " ignorada (campos vazios)");
+                    if (email.isBlank() || name.isBlank() || rawPassword.isBlank()) {
+                        report.add("⚠️ Linha " + (row.getRowNum() + 1) + ": campos vazios");
                         continue;
                     }
 
-                    UserType type = UserType.valueOf(typeStr.toUpperCase());
                     String hashedPassword = passwordEncoder.encode(rawPassword);
 
-                    User user = new User(null, name, email, hashedPassword, type);
+                    User user = new User(null, name, email, hashedPassword, UserType.USER);
 
                     userService.createOrUpdate(user, requester);
 
-                    report.add("Sucesso: " + email);
+                    report.add("✅ Importado: " + email);
+
+                } catch (DataIntegrityViolationException e) {
+                    report.add("⚠️ Email já existe: " + getCellValue(row.getCell(0)));
+
+                } catch (IllegalArgumentException e) {
+                    report.add("❌ Linha " + (row.getRowNum() + 1) + ": dados inválidos");
 
                 } catch (Exception e) {
-                    report.add("Erro na linha " + row.getRowNum() + ": " + e.getMessage());
+                    report.add("❌ Linha " + (row.getRowNum() + 1) + ": erro inesperado - " + e.getMessage());
                 }
             }
 

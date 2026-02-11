@@ -27,7 +27,7 @@ public class UserEntity {
     private UserType type;
 
     @Column(nullable = false)
-    private Boolean active;
+    private Boolean active = true;
 
     @Column(nullable = false, updatable = false)
     private LocalDateTime createdAt;
@@ -38,20 +38,30 @@ public class UserEntity {
     // ✅ Construtor padrão (JPA)
     public UserEntity() {}
 
-    // ✅ Hook automático antes de salvar
+    // 🔥 Garante valores antes de salvar
     @PrePersist
     public void prePersist() {
-        this.createdAt = LocalDateTime.now();
-        this.updatedAt = LocalDateTime.now();
+        LocalDateTime now = LocalDateTime.now();
+        this.createdAt = now;
+        this.updatedAt = now;
+
         if (this.active == null) {
             this.active = true;
         }
+
+        if (this.type == null) {
+            this.type = UserType.USER; // 🔒 segurança por padrão
+        }
     }
 
-    // ✅ Hook automático antes de atualizar
+    // 🔥 Atualiza updatedAt automaticamente
     @PreUpdate
     public void preUpdate() {
         this.updatedAt = LocalDateTime.now();
+
+        if (this.active == null) {
+            this.active = true; // nunca deixar null
+        }
     }
 
     // GETTERS E SETTERS

@@ -14,12 +14,20 @@ public class ListUsersUseCase {
     }
 
     public List<User> execute(User requester) {
+
         if (requester.isAdmin()) {
-            return repository.findAll();
+            return repository.findAll().stream()
+                    .filter(User::isActive)  // 👈 melhor usar isActive()
+                    .toList();
         }
-        return List.of(
-                repository.findById(requester.getId())
-                        .orElseThrow(() -> new RuntimeException("Usuário não encontrado"))
-        );
+
+        User self = repository.findById(requester.getId())
+                .orElseThrow(() -> new RuntimeException("Usuário não encontrado"));
+
+        if (!Boolean.TRUE.equals(self.getActive())) {
+            throw new RuntimeException("Usuário desativado");
+        }
+
+        return List.of(self);
     }
 }

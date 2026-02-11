@@ -9,3 +9,6 @@ spring:
       ddl-auto: update   # pode ser 'create' para criar do zero
     show-sql: true
 
+jwt:
+  secret: "minha-chave-super-secreta-de-32-bytes-ou-mais"
+  expiration: 3600000

@@ -11,20 +11,26 @@ public class UpdateUserUseCase {
         this.repository = repository;
     }
 
-    public User execute(Long id, User userData, User requester) {
-
+    public User execute(Long id, User data, User requester) {
         User existing = repository.findById(id)
                 .orElseThrow(() -> new RuntimeException("Usuário não encontrado"));
 
-        // 🔒 USER só pode atualizar a si mesmo
+        // 🔒 USER só pode alterar a si mesmo
         if (!requester.isAdmin() && !existing.getId().equals(requester.getId())) {
             throw new RuntimeException("Você não tem permissão para atualizar este usuário");
         }
 
-        existing.setName(userData.getName());
-        existing.setEmail(userData.getEmail());
-        existing.setPassword(userData.getPassword());
-        existing.setType(userData.getType());
+        existing.setName(data.getName());
+        existing.setEmail(data.getEmail());
+
+        if (data.getPassword() != null) {
+            existing.setPassword(data.getPassword());
+        }
+
+        // 🔒 SOMENTE ADMIN pode alterar TYPE
+        if (requester.isAdmin() && data.getType() != null) {
+            existing.setType(data.getType());
+        }
 
         return repository.save(existing);
     }

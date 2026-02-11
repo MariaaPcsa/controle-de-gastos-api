@@ -1,6 +1,7 @@
 package com.maria.finance.user.application.service;
 
 import com.maria.finance.user.domain.model.User;
+import com.maria.finance.user.domain.model.UserType;
 import com.maria.finance.user.domain.repository.UserRepository;
 import com.maria.finance.user.domain.usecase.*;
 import org.springframework.stereotype.Service;
@@ -17,6 +18,7 @@ public class UserApplicationService {
     private final UpdateUserUseCase update;
     private final FindUserByEmailUseCase findByEmail;
     private final FindUserByIdUseCase findById;
+    private final UpdateUserRoleUseCase updateRole;
 
     public UserApplicationService(UserRepository repository) {
         this.create = new CreateUserUseCase(repository);
@@ -25,6 +27,7 @@ public class UserApplicationService {
         this.update = new UpdateUserUseCase(repository);
         this.findByEmail = new FindUserByEmailUseCase(repository);
         this.findById = new FindUserByIdUseCase(repository);
+        this.updateRole = new UpdateUserRoleUseCase(repository);
     }
 
     public User create(User user) {
@@ -59,5 +62,9 @@ public class UserApplicationService {
         return findByEmail(user.getEmail())
                 .map(existing -> update(existing.getId(), user, requester))
                 .orElseGet(() -> create(user));
+    }
+
+    public User updateRole(Long id, UserType newType, User requester) {
+        return updateRole.updateRole(id, newType, requester);
     }
 }

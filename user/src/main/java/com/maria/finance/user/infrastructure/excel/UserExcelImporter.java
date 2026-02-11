@@ -10,7 +10,6 @@ import org.springframework.stereotype.Component;
 import org.springframework.web.multipart.MultipartFile;
 
 import java.io.InputStream;
-import java.io.IOException;
 
 @Component
 public class UserExcelImporter {
@@ -24,7 +23,9 @@ public class UserExcelImporter {
         this.passwordEncoder = passwordEncoder;
     }
 
-    public void importUsers(MultipartFile file) {
+    public UserImportResult importUsers(MultipartFile file) {
+
+        UserImportResult result = new UserImportResult();
 
         try (InputStream is = file.getInputStream();
              Workbook workbook = new XSSFWorkbook(is)) {
@@ -32,31 +33,62 @@ public class UserExcelImporter {
             Sheet sheet = workbook.getSheetAt(0);
 
             for (Row row : sheet) {
-                if (row.getRowNum() == 0) continue; // pula header
 
-                String name = row.getCell(0).getStringCellValue().trim();
-                String email = row.getCell(1).getStringCellValue().trim();
-                String rawPassword = row.getCell(2).getStringCellValue().trim();
+                if (row.getRowNum() == 0) continue; // header
 
-                if (name.isBlank() || email.isBlank() || rawPassword.isBlank()) {
-                    continue;
+                result.incrementTotal();
+
+                try {
+                    String name = getCellValue(row.getCell(0));
+                    String email = getCellValue(row.getCell(1));
+                    String rawPassword = getCellValue(row.getCell(2));
+
+                    if (name.isBlank() || email.isBlank() || rawPassword.isBlank()) {
+                        result.incrementInvalid();
+                        result.addError("Linha " + (row.getRowNum() + 1) + ": dados obrigatórios em branco");
+                        continue;
+                    }
+
+                    // 🔒 não deixa email duplicado
+                    if (service.findByEmail(email).isPresent()) {
+                        result.incrementDuplicated();
+                        result.addError("Linha " + (row.getRowNum() + 1) + ": email já cadastrado -> " + email);
+                        continue;
+                    }
+
+                    String hashedPassword = passwordEncoder.encode(rawPassword);
+
+                    User user = new User(
+                            null,
+                            name,
+                            email,
+                            hashedPassword,
+                            UserType.USER
+                    );
+
+                    service.create(user);
+                    result.incrementSuccess();
+
+                } catch (Exception e) {
+                    result.incrementInvalid();
+                    result.addError("Linha " + (row.getRowNum() + 1) + ": erro ao importar -> " + e.getMessage());
                 }
-
-                String hashedPassword = passwordEncoder.encode(rawPassword);
-
-                User user = new User(
-                        null,
-                        name,
-                        email,
-                        hashedPassword, // ✅ agora criptografada
-                        UserType.USER
-                );
-
-                service.create(user);
             }
 
-        } catch (IOException e) {
-            throw new RuntimeException("Erro ao importar usuários via Excel", e);
+            return result;
+
+        } catch (Exception e) {
+            throw new RuntimeException("Erro ao processar arquivo Excel", e);
         }
+    }
+
+    private String getCellValue(Cell cell) {
+        if (cell == null) return "";
+
+        return switch (cell.getCellType()) {
+            case STRING -> cell.getStringCellValue().trim();
+            case NUMERIC -> String.valueOf((long) cell.getNumericCellValue());
+            default -> "";
+        };
     }
 }
