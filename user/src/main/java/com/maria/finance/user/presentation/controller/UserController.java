@@ -6,18 +6,15 @@ import com.maria.finance.user.domain.model.UserType;
 import com.maria.finance.user.infrastructure.security.JwtService;
 import com.maria.finance.user.presentation.dto.UserRequestDTO;
 import com.maria.finance.user.presentation.dto.UserResponseDTO;
-import jakarta.validation.Valid;
-import org.springframework.http.ResponseEntity;
-import org.springframework.web.bind.annotation.*;
-
 import io.swagger.v3.oas.annotations.Operation;
+import io.swagger.v3.oas.annotations.Parameter;
 import io.swagger.v3.oas.annotations.security.SecurityRequirement;
 import io.swagger.v3.oas.annotations.tags.Tag;
+import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
 
 import java.util.List;
 import java.util.Map;
-
 
 @Tag(name = "Users", description = "Endpoints de usuários")
 @RestController
@@ -33,10 +30,13 @@ public class UserController {
         this.jwt = jwt;
     }
 
-    // 🔒 ADMIN: pode buscar qualquer ID | USER: só o próprio ID
+    @Operation(summary = "Buscar usuário por ID")
     @GetMapping("/{id}")
     public ResponseEntity<UserResponseDTO> findById(
-            @PathVariable Long id,
+            @Parameter(name = "id", description = "ID do usuário", example = "1", required = true)
+            @PathVariable("id") Long id,
+
+            @Parameter(description = "Token JWT no formato: Bearer {token}", required = true)
             @RequestHeader("Authorization") String authHeader
     ) {
         User requester = jwt.getUserFromHeader(authHeader);
@@ -47,6 +47,7 @@ public class UserController {
     @Operation(summary = "Listar usuários")
     @GetMapping
     public ResponseEntity<List<UserResponseDTO>> list(
+            @Parameter(description = "Token JWT no formato: Bearer {token}", required = true)
             @RequestHeader("Authorization") String authHeader
     ) {
         User requester = jwt.getUserFromHeader(authHeader);
@@ -59,10 +60,13 @@ public class UserController {
         return ResponseEntity.ok(response);
     }
 
-    @Operation(summary = "Delete usuários")
+    @Operation(summary = "Deletar usuário")
     @DeleteMapping("/{id}")
     public ResponseEntity<Void> delete(
-            @PathVariable Long id,
+            @Parameter(name = "id", description = "ID do usuário a ser removido", example = "10", required = true)
+            @PathVariable("id") Long id,
+
+            @Parameter(description = "Token JWT no formato: Bearer {token}", required = true)
             @RequestHeader("Authorization") String authHeader
     ) {
         User requester = jwt.getUserFromHeader(authHeader);
@@ -70,11 +74,15 @@ public class UserController {
         return ResponseEntity.noContent().build();
     }
 
-    @Operation(summary = "Atualizar usuários")
+    @Operation(summary = "Atualizar usuário")
     @PutMapping("/{id}")
     public ResponseEntity<UserResponseDTO> update(
-            @PathVariable Long id,
-            @Valid @RequestBody UserRequestDTO dto,
+            @Parameter(name = "id", description = "ID do usuário a ser atualizado", example = "10", required = true)
+            @PathVariable("id") Long id,
+
+            @RequestBody UserRequestDTO dto,
+
+            @Parameter(description = "Token JWT no formato: Bearer {token}", required = true)
             @RequestHeader("Authorization") String authHeader
     ) {
         User requester = jwt.getUserFromHeader(authHeader);
@@ -90,11 +98,15 @@ public class UserController {
         return ResponseEntity.ok(UserResponseDTO.fromDomain(updated));
     }
 
-    @Operation(summary = "Atualizar usuários somente ADMIN")
+    @Operation(summary = "Atualizar role (ADMIN)")
     @PatchMapping("/{id}/role")
     public ResponseEntity<UserResponseDTO> updateRole(
-            @PathVariable Long id,
+            @Parameter(name = "id", description = "ID do usuário", example = "10", required = true)
+            @PathVariable("id") Long id,
+
             @RequestBody Map<String, String> body,
+
+            @Parameter(description = "Token JWT no formato: Bearer {token}", required = true)
             @RequestHeader("Authorization") String authHeader
     ) {
         User requester = jwt.getUserFromHeader(authHeader);
@@ -105,5 +117,20 @@ public class UserController {
         return ResponseEntity.ok(UserResponseDTO.fromDomain(updated));
     }
 
+    @Operation(summary = "Reativar usuário (somente ADMIN)")
+    @PatchMapping("/{id}/reactivate")
+    public ResponseEntity<UserResponseDTO> reactivate(
+            @Parameter(name = "id", description = "ID do usuário a ser reativado", example = "10", required = true)
+            @PathVariable("id") Long id,
+
+            @Parameter(description = "Token JWT no formato: Bearer {token}", required = true)
+            @RequestHeader("Authorization") String authHeader
+    ) {
+        User requester = jwt.getUserFromHeader(authHeader);
+
+        User reactivated = service.reactivate(id, requester);
+
+        return ResponseEntity.ok(UserResponseDTO.fromDomain(reactivated));
+    }
 
 }

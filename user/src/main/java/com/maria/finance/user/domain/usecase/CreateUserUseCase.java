@@ -1,5 +1,7 @@
 package com.maria.finance.user.domain.usecase;
 
+
+
 import com.maria.finance.user.domain.model.User;
 import com.maria.finance.user.domain.repository.UserRepository;
 
@@ -23,6 +25,7 @@ public class CreateUserUseCase {
                 .ifPresent(u -> {
                     throw new RuntimeException("Email já cadastrado");
                 });
+
 
         return repository.save(user);
     }

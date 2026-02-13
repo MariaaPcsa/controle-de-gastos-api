@@ -4,6 +4,8 @@ import com.maria.finance.user.domain.model.User;
 import com.maria.finance.user.domain.model.UserType;
 import com.maria.finance.user.domain.repository.UserRepository;
 import com.maria.finance.user.domain.usecase.*;
+import jakarta.validation.constraints.NotBlank;
+import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.stereotype.Service;
 
 import java.util.List;
@@ -19,8 +21,10 @@ public class UserApplicationService {
     private final FindUserByEmailUseCase findByEmail;
     private final FindUserByIdUseCase findById;
     private final UpdateUserRoleUseCase updateRole;
+    private final ReactivateUserUseCase reactivate;
 
-    public UserApplicationService(UserRepository repository) {
+
+    public UserApplicationService(UserRepository repository, PasswordEncoder passwordEncoder) {
         this.create = new CreateUserUseCase(repository);
         this.list = new ListUsersUseCase(repository);
         this.delete = new DeleteUserUseCase(repository);
@@ -28,10 +32,17 @@ public class UserApplicationService {
         this.findByEmail = new FindUserByEmailUseCase(repository);
         this.findById = new FindUserByIdUseCase(repository);
         this.updateRole = new UpdateUserRoleUseCase(repository);
+        this.reactivate = new ReactivateUserUseCase(repository);
+
     }
 
+    // ✅ REGRA CORRETA: valida senha CRUA e só depois criptografa
     public User create(User user) {
-        return create.execute(user);
+        create.execute(user); // valida email + senha fraca + duplicado
+
+
+
+        return user;
     }
 
     public List<User> list(User requester) {
@@ -67,4 +78,11 @@ public class UserApplicationService {
     public User updateRole(Long id, UserType newType, User requester) {
         return updateRole.updateRole(id, newType, requester);
     }
+
+    public User reactivate(Long id, User requester) {
+        return reactivate.execute(id, requester);
+    }
+
+
+
 }

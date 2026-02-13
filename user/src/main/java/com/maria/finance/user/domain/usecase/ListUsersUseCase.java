@@ -17,7 +17,6 @@ public class ListUsersUseCase {
 
         if (requester.isAdmin()) {
             return repository.findAll().stream()
-                    .filter(User::isActive)  // 👈 melhor usar isActive()
                     .toList();
         }
 

@@ -5,15 +5,12 @@ import com.maria.finance.user.domain.model.User;
 import com.maria.finance.user.domain.model.UserType;
 import com.maria.finance.user.infrastructure.security.JwtService;
 import com.maria.finance.user.presentation.dto.AuthRequestDTO;
-import com.maria.finance.user.presentation.dto.AuthResponseDTO;
 import com.maria.finance.user.presentation.dto.JwtResponseDTO;
 import com.maria.finance.user.presentation.dto.UserRequestDTO;
 import com.maria.finance.user.presentation.dto.UserResponseDTO;
-import io.swagger.v3.oas.annotations.Parameter;
 import org.springframework.http.ResponseEntity;
 import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.web.bind.annotation.*;
-import org.springframework.web.multipart.MultipartFile;
 
 @RestController
 @RequestMapping("/api/auth")
@@ -28,21 +25,15 @@ public class AuthController {
         this.jwt = jwt;
         this.passwordEncoder = passwordEncoder;
     }
-
-    // ✅ REGISTER → SEMPRE USER
     @PostMapping("/register")
-    public ResponseEntity<UserResponseDTO> register(@RequestBody UserRequestDTO dto) {
-
-        String hashedPassword = passwordEncoder.encode(dto.password());
-
+    public ResponseEntity<UserResponseDTO> register(@RequestBody UserRequestDTO dto){
+        String hashedPassword =passwordEncoder.encode(dto.password());
         User user = new User(
                 null,
                 dto.name(),
                 dto.email(),
                 hashedPassword,
-                UserType.USER
-        );
-
+                UserType.USER );
         User created = service.create(user);
         return ResponseEntity.ok(UserResponseDTO.fromDomain(created));
     }
