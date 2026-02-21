@@ -1,6 +1,6 @@
 package com.finance.transaction_service.domain.model;
 
-public enum TransactionType {
+public enum     TransactionType {
 
     DEPOSIT("Depósito", Operation.INCOME),
     WITHDRAW("Saque", Operation.EXPENSE),

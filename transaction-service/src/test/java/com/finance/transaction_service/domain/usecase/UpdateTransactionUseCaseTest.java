@@ -7,6 +7,7 @@ import org.junit.jupiter.api.Test;
 
 import java.math.BigDecimal;
 import java.util.Optional;
+import java.util.UUID;
 
 import static org.junit.jupiter.api.Assertions.*;
 import static org.mockito.Mockito.*;
@@ -26,36 +27,39 @@ class UpdateTransactionUseCaseTest {
                 BigDecimal.valueOf(1000),   // valor convertido em BRL
                 BigDecimal.valueOf(1000),   // valor original
                 "BRL",
+                "SALÁRIO",
                 TransactionType.DEPOSIT
         );
+
+        UUID transactionId = existing.getId();
 
         // Transação atualizada
         Transaction updated = existing.update(
                 "Salário Atualizado",
-                BigDecimal.valueOf(1200),   // valor convertido
-                BigDecimal.valueOf(1200),   // valor original
-                "BRL",
+                BigDecimal.valueOf(1200),
+                BigDecimal.valueOf(1200),
+                "SALÁRIO",
                 TransactionType.DEPOSIT
         );
 
-        // Configuração do mock
-        when(repo.findById(1L)).thenReturn(Optional.of(existing));
+        // Configuração do mock (agora usando UUID)
+        when(repo.findById(transactionId)).thenReturn(Optional.of(existing));
         when(repo.save(any())).thenReturn(updated);
 
-        // Executa o use case com todos os argumentos necessários
+        // Executa o use case
         Transaction result = useCase.execute(
-                1L,
+                transactionId,
                 "Salário Atualizado",
                 BigDecimal.valueOf(1200),
                 BigDecimal.valueOf(1200),
-                "BRL",
+                "SALÁRIO",
                 TransactionType.DEPOSIT
         );
 
         // Verificações
         assertEquals(BigDecimal.valueOf(1200), result.getAmount());
         assertEquals("Salário Atualizado", result.getDescription());
-        assertEquals("BRL", result.getCurrency());
+        assertEquals("SALÁRIO", result.getCategory());
         assertEquals(TransactionType.DEPOSIT, result.getType());
 
         // Verifica se o save foi chamado uma vez
@@ -67,20 +71,18 @@ class UpdateTransactionUseCaseTest {
         TransactionRepository repo = mock(TransactionRepository.class);
         UpdateTransactionUseCase useCase = new UpdateTransactionUseCase(repo);
 
-        when(repo.findById(1L)).thenReturn(Optional.empty());
+        UUID fakeId = UUID.randomUUID();
+        when(repo.findById(fakeId)).thenReturn(Optional.empty());
 
         assertThrows(RuntimeException.class, () ->
                 useCase.execute(
-                        1L,
+                        fakeId,
                         "Nova Descrição",
                         BigDecimal.valueOf(100),
                         BigDecimal.valueOf(100),
-                        "BRL",
+                        "MISC",
                         TransactionType.DEPOSIT
                 )
         );
     }
 }
-
-
-

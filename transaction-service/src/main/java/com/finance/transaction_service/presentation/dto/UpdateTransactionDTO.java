@@ -1,12 +1,16 @@
 package com.finance.transaction_service.presentation.dto;
 
-import com.finance.transaction_service.domain.model.Transaction;
 import com.finance.transaction_service.domain.model.TransactionType;
-import jakarta.validation.constraints.*;
+import jakarta.validation.constraints.DecimalMin;
+import jakarta.validation.constraints.NotBlank;
+import jakarta.validation.constraints.NotNull;
 
 import java.math.BigDecimal;
 
-public class TransactionRequestDTO {
+public class UpdateTransactionDTO {
+
+    @NotBlank(message = "A descrição da transação é obrigatória")
+    private String description;
 
     @NotNull(message = "O valor da transação é obrigatório")
     @DecimalMin(value = "0.01", message = "O valor da transação deve ser maior que zero")
@@ -21,10 +25,22 @@ public class TransactionRequestDTO {
     @NotBlank(message = "A categoria da transação é obrigatória")
     private String category;
 
-    @NotBlank(message = "A descrição da transação é obrigatória")
-    private String description;
+    // ================= CONSTRUCTORS =================
+    public UpdateTransactionDTO() {}
+
+    public UpdateTransactionDTO(String description, BigDecimal amount,
+                               String currency, TransactionType type, String category) {
+        this.description = description;
+        this.amount = amount;
+        this.currency = currency;
+        this.type = type;
+        this.category = category;
+    }
 
     // ================= GETTERS & SETTERS =================
+    public String getDescription() { return description; }
+    public void setDescription(String description) { this.description = description; }
+
     public BigDecimal getAmount() { return amount; }
     public void setAmount(BigDecimal amount) { this.amount = amount; }
 
@@ -37,20 +53,15 @@ public class TransactionRequestDTO {
     public String getCategory() { return category; }
     public void setCategory(String category) { this.category = category; }
 
-    public String getDescription() { return description; }
-    public void setDescription(String description) { this.description = description; }
-
-    // ================= CONVERSÃO DTO → DOMAIN =================
-    public Transaction toDomain(Long userId, BigDecimal convertedAmount) {
-        // convertedAmount = valor convertido para BRL (ou mesmo currency do service)
-        return Transaction.create(
-                userId,
-                description,
-                convertedAmount, // valor convertido
-                amount,          // valor original enviado pelo usuário
-                currency,
-                category,
-                type
-        );
+    @Override
+    public String toString() {
+        return "UpdateTransactionDTO{" +
+                "description='" + description + '\'' +
+                ", amount=" + amount +
+                ", currency='" + currency + '\'' +
+                ", type=" + type +
+                ", category='" + category + '\'' +
+                '}';
     }
 }
+

@@ -6,11 +6,13 @@ import com.finance.transaction_service.infrastructure.persistence.entity.Transac
 import com.finance.transaction_service.infrastructure.persistence.mapper.TransactionMapper;
 import org.springframework.stereotype.Repository;
 
+import java.time.LocalDateTime;
 import java.util.List;
 import java.util.Optional;
+import java.util.UUID;
 
 @Repository
-public abstract class TransactionRepositoryImpl implements TransactionRepository {
+public class TransactionRepositoryImpl implements TransactionRepository {
 
     private final TransactionRepositoryJpa jpaRepository;
 
@@ -34,18 +36,29 @@ public abstract class TransactionRepositoryImpl implements TransactionRepository
     }
 
     @Override
-    public Optional<Transaction> findById(Long id) {
+    public List<Transaction> findByUserIdAndPeriod(Long userId, LocalDateTime start, LocalDateTime end) {
+        return jpaRepository.findByUserIdAndCreatedAtBetween(userId, start, end)
+                .stream()
+                .map(TransactionMapper::toDomain)
+                .toList();
+    }
+
+    // ✅ Mudou de Long para UUID
+    @Override
+    public Optional<Transaction> findById(UUID id) {
         return jpaRepository.findById(id)
                 .map(TransactionMapper::toDomain);
     }
 
+    // ✅ Mudou de Long para UUID
     @Override
-    public void deleteById(Long id) {
+    public void deleteById(UUID id) {
         jpaRepository.deleteById(id);
     }
 
+    // ✅ Mudou de Long para UUID
     @Override
-    public boolean existsById(Long id) {
+    public boolean existsById(UUID id) {
         return jpaRepository.existsById(id);
     }
 }

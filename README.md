@@ -88,7 +88,7 @@ Após subir o projeto, acesse:
 http://localhost:8080/swagger-ui.html
 ou
 
-http://localhost:8080/swagger-ui/index.html
+http://localhost:8081/swagger-ui/index.html
 Você poderá testar todos os endpoints direto pelo navegador 😎
 
 📌 Endpoints Principais (Podem mudar 🚧)

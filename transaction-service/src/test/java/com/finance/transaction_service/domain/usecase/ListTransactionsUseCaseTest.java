@@ -6,6 +6,7 @@ import com.finance.transaction_service.domain.repository.TransactionRepository;
 import org.junit.jupiter.api.Test;
 
 import java.math.BigDecimal;
+import java.time.LocalDateTime;
 import java.util.ArrayList;
 import java.util.List;
 
@@ -19,20 +20,43 @@ class ListTransactionsUseCaseTest {
         TransactionRepository repo = mock(TransactionRepository.class);
         ListTransactionsUseCase useCase = new ListTransactionsUseCase(repo);
 
-        // Criação de transações
-        Transaction t1 = Transaction.create(1L, "Salário", BigDecimal.valueOf(1000), BigDecimal.valueOf(1000), "BRL", TransactionType.DEPOSIT);
-        Transaction t2 = Transaction.create(1L, "Aluguel", BigDecimal.valueOf(500), BigDecimal.valueOf(500), "BRL", TransactionType.WITHDRAW);
+        Transaction t1 = Transaction.restore(
+                java.util.UUID.randomUUID(),
+                1L,
+                "Salário",
+                BigDecimal.valueOf(1000),
+                BigDecimal.valueOf(1000),
+                "BRL",
+                "Renda",
+                TransactionType.DEPOSIT,
+                LocalDateTime.now().minusDays(1) // mais antiga
+        );
 
-        // Mock retorna lista mutável para evitar UnsupportedOperationException
-        when(repo.findByUserId(1L)).thenReturn(new ArrayList<>(List.of(t1, t2)));
+        Transaction t2 = Transaction.restore(
+                java.util.UUID.randomUUID(),
+                1L,
+                "Aluguel",
+                BigDecimal.valueOf(500),
+                BigDecimal.valueOf(500),
+                "BRL",
+                "Moradia",
+                TransactionType.WITHDRAW,
+                LocalDateTime.now() // mais recente
+        );
 
-        // Executa o use case
+        // Lista mutável para evitar UnsupportedOperationException
+        List<Transaction> transactions = new ArrayList<>();
+        transactions.add(t1);
+        transactions.add(t2);
+
+        when(repo.findByUserId(1L)).thenReturn(transactions);
+
         List<Transaction> result = useCase.execute(1L);
 
-        // Verificações
+        // Ordem decrescente por data
         assertEquals(2, result.size());
-        assertEquals("Salário", result.get(0).getDescription());
-        assertEquals("Aluguel", result.get(1).getDescription());
+        assertEquals("Aluguel", result.get(0).getDescription());
+        assertEquals("Salário", result.get(1).getDescription());
 
         verify(repo, times(1)).findByUserId(1L);
     }
