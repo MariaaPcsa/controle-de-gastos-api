@@ -1,6 +1,7 @@
 package com.finance.transaction_service.security;
 
 import org.springframework.security.core.GrantedAuthority;
+import org.springframework.security.core.authority.SimpleGrantedAuthority;
 import org.springframework.security.core.userdetails.UserDetails;
 
 import java.util.Collection;
@@ -11,11 +12,14 @@ public class CustomUserDetails implements UserDetails {
     private final Long id;
     private final String username;
     private final String password;
+    private final Collection<? extends GrantedAuthority> authorities;
 
-    public CustomUserDetails(Long id, String username, String password) {
+    public CustomUserDetails(Long id, String username, String password, String role) {
         this.id = id;
         this.username = username;
         this.password = password;
+        // Atribui a role do usuário
+        this.authorities = Collections.singletonList(new SimpleGrantedAuthority(role));
     }
 
     public Long getId() {
@@ -24,8 +28,7 @@ public class CustomUserDetails implements UserDetails {
 
     @Override
     public Collection<? extends GrantedAuthority> getAuthorities() {
-        // Pode ser expandido para roles no futuro
-        return Collections.emptyList();
+        return authorities;
     }
 
     @Override

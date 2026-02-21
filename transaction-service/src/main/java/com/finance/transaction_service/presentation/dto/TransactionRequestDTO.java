@@ -24,7 +24,7 @@ public class TransactionRequestDTO {
     @NotBlank(message = "A descrição da transação é obrigatória")
     private String description;
 
-    // Getters e Setters
+    // ================= GETTERS & SETTERS =================
     public BigDecimal getAmount() { return amount; }
     public void setAmount(BigDecimal amount) { this.amount = amount; }
 
@@ -40,8 +40,17 @@ public class TransactionRequestDTO {
     public String getDescription() { return description; }
     public void setDescription(String description) { this.description = description; }
 
-    // Converte DTO → Domain
-    public Transaction toDomain(Long userId) {
-        return Transaction.create(userId, description, amount, amount, currency, type);
+    // ================= CONVERSÃO DTO → DOMAIN =================
+    public Transaction toDomain(Long userId, BigDecimal convertedAmount) {
+        // convertedAmount = valor convertido para BRL (ou mesmo currency do service)
+        return Transaction.create(
+                userId,
+                description,
+                convertedAmount, // valor convertido
+                amount,          // valor original enviado pelo usuário
+                currency,
+                category,
+                type
+        );
     }
 }

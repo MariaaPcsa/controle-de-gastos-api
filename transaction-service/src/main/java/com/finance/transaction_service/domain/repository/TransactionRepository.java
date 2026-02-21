@@ -5,18 +5,25 @@ import com.finance.transaction_service.domain.model.Transaction;
 import java.time.LocalDateTime;
 import java.util.List;
 import java.util.Optional;
+import java.util.UUID;
 
 public interface TransactionRepository {
 
+    // Salva ou atualiza uma transação
     Transaction save(Transaction transaction);
 
-    Optional<Transaction> findById(Long id);
+    // Busca transação por UUID
+    Optional<Transaction> findById(UUID id);
 
+    // Lista todas as transações de um usuário
     List<Transaction> findByUserId(Long userId);
 
+    // Lista transações de um usuário em um período
     List<Transaction> findByUserIdAndPeriod(Long userId, LocalDateTime start, LocalDateTime end);
 
-    boolean existsById(Long id);
+    // Verifica se existe transação pelo UUID
+    boolean existsById(UUID id);
 
-    void deleteById(Long id);
+    // Deleta transação pelo UUID
+    void deleteById(UUID id);
 }

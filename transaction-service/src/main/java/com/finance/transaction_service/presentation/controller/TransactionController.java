@@ -4,6 +4,7 @@ import com.finance.transaction_service.application.service.TransactionApplicatio
 import com.finance.transaction_service.domain.model.Transaction;
 import com.finance.transaction_service.presentation.dto.TransactionRequestDTO;
 import com.finance.transaction_service.presentation.dto.TransactionResponseDTO;
+import io.swagger.v3.oas.annotations.security.SecurityRequirement;
 import jakarta.validation.Valid;
 import io.swagger.v3.oas.annotations.Operation;
 import io.swagger.v3.oas.annotations.responses.ApiResponse;
@@ -13,6 +14,7 @@ import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
 
 import java.util.List;
+import java.util.UUID;
 
 @RestController
 @RequestMapping("/api/transactions")
@@ -29,7 +31,9 @@ public class TransactionController {
         return TransactionResponseDTO.fromDomain(t);
     }
 
-    @Operation(summary = "Criar transação", description = "Cria uma nova transação (depósito, saque, transferência ou compra)")
+    // ================= CREATE =================
+    @SecurityRequirement(name = "bearerAuth")
+    @Operation(summary = "Criar transação")
     @ApiResponse(responseCode = "201", description = "Transação criada com sucesso")
     @PostMapping
     public ResponseEntity<TransactionResponseDTO> create(
@@ -41,37 +45,41 @@ public class TransactionController {
                 dto.getDescription(),
                 dto.getAmount(),
                 dto.getCurrency(),
+                dto.getCategory(),
                 dto.getType()
         );
 
         return ResponseEntity.status(HttpStatus.CREATED).body(toResponse(transaction));
     }
 
-    @Operation(summary = "Listar transações", description = "Lista todas as transações do usuário")
+    // ================= LIST =================
+    @Operation(summary = "Listar transações")
     @ApiResponse(responseCode = "200", description = "Lista de transações retornada com sucesso")
     @GetMapping
     public ResponseEntity<List<TransactionResponseDTO>> list(
             @RequestHeader("X-User-Id") Long userId) {
 
-        List<TransactionResponseDTO> result = service.list(userId).stream()
-                .map(this::toResponse).toList();
+        List<TransactionResponseDTO> result = service.list(userId)
+                .stream()
+                .map(this::toResponse)
+                .toList();
 
         return ResponseEntity.ok(result);
     }
 
-    @Operation(summary = "Deletar transação", description = "Deleta uma transação pelo ID")
-    @ApiResponse(responseCode = "204", description = "Transação deletada com sucesso")
+    // ================= DELETE =================
+    @Operation(summary = "Deletar transação")
     @DeleteMapping("/{id}")
-    public ResponseEntity<Void> delete(@PathVariable Long id) {
+    public ResponseEntity<Void> delete(@PathVariable UUID id) {
         service.delete(id);
         return ResponseEntity.noContent().build();
     }
 
-    @Operation(summary = "Atualizar transação", description = "Atualiza os dados de uma transação existente")
-    @ApiResponse(responseCode = "200", description = "Transação atualizada com sucesso")
+    // ================= UPDATE =================
+    @Operation(summary = "Atualizar transação")
     @PutMapping("/{id}")
     public ResponseEntity<TransactionResponseDTO> update(
-            @PathVariable Long id,
+            @PathVariable UUID id,
             @Valid @RequestBody TransactionRequestDTO dto,
             @RequestHeader("X-User-Id") Long userId) {
 
@@ -79,8 +87,10 @@ public class TransactionController {
                 id,
                 dto.getDescription(),
                 dto.getAmount(),
-                dto.getCurrency(),
-                dto.getType()
+                dto.getAmount(), // originalAmount (pode ser ajustado se necessário)
+                dto.getCategory(),
+                dto.getType(),
+                dto.getCurrency()
         );
 
         return ResponseEntity.ok(toResponse(transaction));

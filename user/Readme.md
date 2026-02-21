@@ -82,16 +82,6 @@ mvn test
 ✔️ Separação de responsabilidades
 ✔️ Documentação de endpoints via Swagger (na raíz da API)
 
-💬 Contribuição
-
-Este serviço faz parte de um projeto open source. Se quiser contribuir:
-
-Faça um fork
-
-Crie uma branch com a mudança (git checkout -b feature/minha-feature)
-
-Envie um pull request
-
 
 📖 Documentação da API (Swagger)
 
@@ -273,5 +263,14 @@ Você pode criar um usuário inicial para testes:
 
 ❌ 409 Conflict
 ➡️ Email já cadastrado
+
+
+Este serviço faz parte de um projeto open source. Se quiser contribuir:
+
+Faça um fork
+
+Crie uma branch com a mudança (git checkout -b feature/minha-feature)
+
+Envie um pull request
 
 Toda contribuição é bem-vinda!

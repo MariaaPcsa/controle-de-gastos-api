@@ -1,44 +1,58 @@
 package com.finance.transaction_service.controller;
 
+import com.finance.transaction_service.application.service.TransactionApplicationService;
 import com.finance.transaction_service.domain.model.Transaction;
 import com.finance.transaction_service.domain.model.TransactionType;
-import com.finance.transaction_service.domain.repository.TransactionRepository;
-import com.finance.transaction_service.domain.usecase.UpdateTransactionUseCase;
+import com.finance.transaction_service.presentation.controller.TransactionController;
+import com.finance.transaction_service.presentation.dto.TransactionResponseDTO;
 import org.junit.jupiter.api.Test;
 
-
 import java.math.BigDecimal;
-import java.util.Optional;
+import java.time.LocalDateTime;
+import java.util.List;
 
-import static org.junit.jupiter.api.Assertions.assertEquals;
-import static org.mockito.ArgumentMatchers.any;
-import static org.mockito.Mockito.mock;
-import static org.mockito.Mockito.when;
+import static org.junit.jupiter.api.Assertions.*;
+import static org.mockito.Mockito.*;
 
-public class TransactionControllerTest {
-
+class TransactionControllerTest {
 
     @Test
-    void should_update_transaction() {
-        TransactionRepository repo = mock(TransactionRepository.class);
-        UpdateTransactionUseCase useCase = new UpdateTransactionUseCase(repo);
+    void should_list_transactions() {
+        TransactionApplicationService service = mock(TransactionApplicationService.class);
+        TransactionController controller = new TransactionController(service);
 
-        Transaction oldT = new Transaction(1L, 1L, "SALARIO", BigDecimal.TEN, BigDecimal.TEN, "BRL", TransactionType.DEPOSIT, null);
-        Transaction newT = new Transaction(1L, 1L, "COMIDA", BigDecimal.valueOf(50), BigDecimal.valueOf(50), "BRL", TransactionType.PURCHASE, null);
-
-        when(repo.findById(1L)).thenReturn(Optional.of(oldT));
-        when(repo.save(any())).thenReturn(newT);
-
-        Transaction result = useCase.execute(
+        Transaction t1 = Transaction.restore(
+                java.util.UUID.randomUUID(),
                 1L,
-                "COMIDA",
-                BigDecimal.valueOf(50), // convertedAmount
-                BigDecimal.valueOf(50), // originalAmount
+                "Salário",
+                BigDecimal.valueOf(1000),
+                BigDecimal.valueOf(1000),
                 "BRL",
-                TransactionType.PURCHASE
+                "Renda",
+                TransactionType.DEPOSIT,
+                LocalDateTime.now().minusDays(1)
         );
 
-        assertEquals(TransactionType.PURCHASE, result.getType());
-        assertEquals(BigDecimal.valueOf(50), result.getAmount());
-    }}
+        Transaction t2 = Transaction.restore(
+                java.util.UUID.randomUUID(),
+                1L,
+                "Aluguel",
+                BigDecimal.valueOf(500),
+                BigDecimal.valueOf(500),
+                "BRL",
+                "Moradia",
+                TransactionType.WITHDRAW,
+                LocalDateTime.now()
+        );
 
+        when(service.list(1L)).thenReturn(List.of(t1, t2));
+
+        List<TransactionResponseDTO> result = controller.list(1L).getBody();
+
+        assertEquals(2, result.size());
+        assertTrue(result.stream().anyMatch(t -> "Salário".equals(t.getDescription())));
+        assertTrue(result.stream().anyMatch(t -> "Aluguel".equals(t.getDescription())));
+
+        verify(service, times(1)).list(1L);
+    }
+}

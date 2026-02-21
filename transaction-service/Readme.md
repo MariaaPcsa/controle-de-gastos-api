@@ -16,6 +16,10 @@ Este módulo é responsável pelo **CRUD de transações** (despesas e receitas)
 
 ## Endpoints (planejados)
 
+http://localhost:8081/swagger-ui.html
+
+mais senha 
+
 | Método | Rota | Descrição |
 |--------|------|-----------|
 | GET | `/transactions` | Listar todas as transações |
@@ -32,3 +36,14 @@ Este módulo é responsável pelo **CRUD de transações** (despesas e receitas)
 4. Adicionar documentação Swagger  
 5. Conectar com `analytics-service`
 
+Para rodar H2:
+
+mvn spring-boot:run -Dspring-boot.run.profiles=test
+
+Para rodar PostgreSQL (padrão):
+
+mvn spring-boot:run
+
+mvn clean install
+mvn spring-boot:run
+mvn clean install
