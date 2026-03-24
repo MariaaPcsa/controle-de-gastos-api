@@ -1,0 +1,19 @@
+version: '3.9'
+
+services:
+  db:
+    image: postgres:14
+    container_name: transactions_db
+    restart: always
+    environment:
+      POSTGRES_USER: postgres
+      POSTGRES_PASSWORD: maria
+      POSTGRES_DB: transactions_db
+    ports:
+      - "5433:5432"
+    volumes:
+      - transactions_db_data:/var/lib/postgresql/data
+
+
+volumes:
+  transactions_db_data:
