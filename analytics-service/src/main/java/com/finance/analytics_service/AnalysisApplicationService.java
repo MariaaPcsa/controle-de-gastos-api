@@ -1,4 +1,4 @@
-package com.finance.analytics_service.application.service;
+package com.finance.analytics_service;
 
 
 import com.finance.analytics_service.domain.model.ExpenseSummary;
@@ -6,8 +6,8 @@ import com.finance.analytics_service.domain.repository.ExpenseRepository;
 import com.finance.analytics_service.domain.usecase.GenerateReportUseCase;
 import com.finance.analytics_service.domain.usecase.ProcessTransactionUseCase;
 import com.finance.analytics_service.infrastructure.persistence.entity.ExpenseEntity;
-import com.finance.analytics_service.infrastructure.report.ExcelReportGenerator;
-import com.finance.analytics_service.infrastructure.report.PdfReportGenerator;
+import com.finance.analytics_service.infrastructure.ExcelReportGenerator;
+import com.finance.analytics_service.infrastructure.PdfReportGenerator;
 import org.springframework.stereotype.Service;
 
 @Service

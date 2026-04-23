@@ -1,7 +1,7 @@
 package com.finance.analytics_service.infrastructure.kafka;
 
 import com.fasterxml.jackson.databind.ObjectMapper;
-import com.finance.analytics_service.application.service.AnalysisApplicationService;
+import com.finance.analytics_service.AnalysisApplicationService;
 import com.finance.analytics_service.infrastructure.kafka.dto.TransactionEventDTO;
 import com.finance.analytics_service.infrastructure.persistence.entity.ExpenseEntity;
 import jakarta.validation.ConstraintViolation;
