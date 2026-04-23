@@ -9,7 +9,8 @@ public class UserImportResult {
     private int success;
     private int duplicatedEmails;
     private int invalidRows;
-    private List<String> errors = new ArrayList<>();
+
+    private List<UserImportError> errors = new ArrayList<>();
 
     public void incrementTotal() { total++; }
     public void incrementSuccess() { success++; }
@@ -20,9 +21,9 @@ public class UserImportResult {
     public int getSuccess() { return success; }
     public int getDuplicatedEmails() { return duplicatedEmails; }
     public int getInvalidRows() { return invalidRows; }
-    public List<String> getErrors() { return errors; }
+    public List<UserImportError> getErrors() { return errors; }
 
-    public void addError(String error) {
+    public void addError(UserImportError error) {
         errors.add(error);
     }
 }

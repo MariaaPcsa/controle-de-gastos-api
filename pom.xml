@@ -29,6 +29,8 @@
         <module>user</module>
         <module>transaction-service</module>
         <module>analytics-service</module>
+        <module>api-gateway</module>
+        <module>examples-generator</module>
     </modules>
 
 </project>

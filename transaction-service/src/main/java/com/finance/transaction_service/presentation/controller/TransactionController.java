@@ -5,20 +5,25 @@ import com.finance.transaction_service.domain.model.Transaction;
 import com.finance.transaction_service.domain.model.TransactionType;
 import com.finance.transaction_service.presentation.dto.*;
 import com.finance.transaction_service.security.CustomUserDetails;
+import com.finance.transaction_service.infrastructure.excel.TransactionExcelImporter;
 import io.swagger.v3.oas.annotations.Operation;
 import io.swagger.v3.oas.annotations.Parameter;
 import io.swagger.v3.oas.annotations.responses.ApiResponse;
 import io.swagger.v3.oas.annotations.security.SecurityRequirement;
 import io.swagger.v3.oas.annotations.tags.Tag;
 import jakarta.validation.Valid;
+import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.format.annotation.DateTimeFormat;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.security.core.annotation.AuthenticationPrincipal;
 import org.springframework.web.bind.annotation.*;
+import org.springframework.web.multipart.MultipartFile;
+import org.springframework.http.MediaType;
 
 import java.time.LocalDateTime;
 import java.util.List;
+import java.util.Optional;
 import java.util.UUID;
 
 
@@ -29,9 +34,18 @@ import java.util.UUID;
 public class TransactionController {
 
     private final TransactionApplicationService service;
+    private final TransactionExcelImporter excelImporter;
 
+    // compat constructor for existing tests
     public TransactionController(TransactionApplicationService service) {
+        this(service, Optional.empty());
+    }
+
+    // main constructor used by Spring
+    @Autowired
+    public TransactionController(TransactionApplicationService service, Optional<TransactionExcelImporter> excelImporterOpt) {
         this.service = service;
+        this.excelImporter = excelImporterOpt.orElse(null);
     }
 
     private TransactionResponseDTO toResponse(Transaction t) {
@@ -171,5 +185,16 @@ public class TransactionController {
         );
 
         return ResponseEntity.ok(toResponse(transaction));
+    }
+
+    // ================= IMPORT =================
+    @SecurityRequirement(name = "bearerAuth")
+    @Operation(summary = "Importar transações via planilha (XLSX)")
+    @PostMapping(value = "/upload", consumes = MediaType.MULTIPART_FORM_DATA_VALUE)
+    public ResponseEntity<ImportResultDTO> upload(@RequestPart("file") MultipartFile file,
+                                                  @AuthenticationPrincipal CustomUserDetails user) {
+        // TODO: validar permissão do usuário (só admin ou owner) - por enquanto qualquer usuário cadastrado pode importar
+        ImportResultDTO result = excelImporter.importFile(file);
+        return ResponseEntity.ok(result);
     }
 }

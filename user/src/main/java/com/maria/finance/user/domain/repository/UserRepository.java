@@ -17,6 +17,8 @@ public interface UserRepository {
 
     List<User> findAll();
 
+    // Contrato para delete lógico (soft-delete)
+    void delete(User user);
 
 
 }

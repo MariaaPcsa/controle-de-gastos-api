@@ -12,6 +12,8 @@ import org.springframework.http.ResponseEntity;
 import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.web.bind.annotation.*;
 
+import java.util.Map;
+
 @RestController
 @RequestMapping("/api/auth")
 public class AuthController {
@@ -20,43 +22,64 @@ public class AuthController {
     private final JwtService jwt;
     private final PasswordEncoder passwordEncoder;
 
-    public AuthController(UserApplicationService service, JwtService jwt, PasswordEncoder passwordEncoder) {
+    public AuthController(UserApplicationService service,
+                          JwtService jwt,
+                          PasswordEncoder passwordEncoder) {
         this.service = service;
         this.jwt = jwt;
         this.passwordEncoder = passwordEncoder;
     }
+
+    // 🚀 REGISTRO
     @PostMapping("/register")
-    public ResponseEntity<UserResponseDTO> register(@RequestBody UserRequestDTO dto){
-        String hashedPassword =passwordEncoder.encode(dto.password());
+    public ResponseEntity<?> register(@RequestBody UserRequestDTO dto) {
+
+        // validação básica
+        if (dto.email() == null || dto.password() == null) {
+            return ResponseEntity.badRequest()
+                    .body(Map.of("error", "Email e senha são obrigatórios"));
+        }
+
+        String hashedPassword = passwordEncoder.encode(dto.password());
+
         User user = new User(
                 null,
                 dto.name(),
                 dto.email(),
                 hashedPassword,
-                UserType.USER );
+                UserType.USER
+        );
+
         User created = service.create(user);
+
         return ResponseEntity.ok(UserResponseDTO.fromDomain(created));
     }
 
+    // 🔐 LOGIN
     @PostMapping("/login")
-    public ResponseEntity<JwtResponseDTO> login(@RequestBody AuthRequestDTO request) {
+    public ResponseEntity<?> login(@RequestBody AuthRequestDTO request) {
 
+        // busca usuário
         User user = service.findByEmail(request.getEmail())
-                .orElseThrow(() -> new RuntimeException("Credenciais inválidas"));
+                .orElse(null);
 
-        // 🔒 BLOQUEIA USUÁRIO INATIVO
+        // credenciais inválidas
+        if (user == null ||
+                !passwordEncoder.matches(request.getPassword(), user.getPassword())) {
+
+            return ResponseEntity.status(401)
+                    .body(Map.of("error", "Email ou senha inválidos"));
+        }
+
+        // usuário inativo
         if (!Boolean.TRUE.equals(user.getActive())) {
-            throw new RuntimeException("Usuário desativado. Acesso bloqueado.");
+            return ResponseEntity.status(403)
+                    .body(Map.of("error", "Usuário desativado"));
         }
 
-        if (!passwordEncoder.matches(request.getPassword(), user.getPassword())) {
-            throw new RuntimeException("Credenciais inválidas");
-        }
-
+        // gera token
         String token = jwt.generateToken(user);
 
         return ResponseEntity.ok(new JwtResponseDTO(token));
     }
-
-
 }

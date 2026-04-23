@@ -6,6 +6,8 @@
         <sourceOutputDir name="target/generated-sources/annotations" />
         <sourceTestOutputDir name="target/generated-test-sources/test-annotations" />
         <outputRelativeToContentRoot value="true" />
+        <module name="api-gateway" />
+        <module name="examples-generator" />
       </profile>
       <profile name="Annotation profile for Controle de Gastos API" enabled="true">
         <sourceOutputDir name="target/generated-sources/annotations" />
@@ -13,18 +15,10 @@
         <outputRelativeToContentRoot value="true" />
         <processorPath useClasspath="false">
           <entry name="$MAVEN_REPOSITORY$/org/projectlombok/lombok/1.18.34/lombok-1.18.34.jar" />
+          <entry name="$MAVEN_REPOSITORY$/org/projectlombok/lombok/1.18.34/lombok-1.18.34.jar" />
         </processorPath>
         <module name="analytics-service" />
         <module name="user" />
-      </profile>
-      <profile name="Annotation profile for transaction-service" enabled="true">
-        <sourceOutputDir name="target/generated-sources/annotations" />
-        <sourceTestOutputDir name="target/generated-test-sources/test-annotations" />
-        <outputRelativeToContentRoot value="true" />
-        <processorPath useClasspath="false">
-          <entry name="$MAVEN_REPOSITORY$/org/projectlombok/lombok/1.18.34/lombok-1.18.34.jar" />
-          <entry name="$MAVEN_REPOSITORY$/org/projectlombok/lombok/1.18.34/lombok-1.18.34.jar" />
-        </processorPath>
         <module name="transaction-service" />
       </profile>
     </annotationProcessing>
@@ -32,6 +26,8 @@
   <component name="JavacSettings">
     <option name="ADDITIONAL_OPTIONS_OVERRIDE">
       <module name="analytics-service" options="-parameters" />
+      <module name="api-gateway" options="-parameters" />
+      <module name="examples-generator" options="-parameters" />
       <module name="transaction-service" options="-parameters" />
       <module name="user" options="-parameters" />
     </option>

@@ -26,7 +26,5 @@ Ainda em desenvolvimento, aqui estarão as regras de cálculo de estatísticas f
 ## 🛠 Próximos passos
 
 1. Criar entidades / models de relatório  
-2. Desenvolver lógica de agregação no serviço  
-3. Adicionar testes automatizados  
-4. Atualizar documentação Swagger
-
+2. ![img_1.png](img_1.png)
+   ![img.png](img.png)

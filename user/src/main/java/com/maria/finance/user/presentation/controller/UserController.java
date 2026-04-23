@@ -3,14 +3,14 @@ package com.maria.finance.user.presentation.controller;
 import com.maria.finance.user.application.service.UserApplicationService;
 import com.maria.finance.user.domain.model.User;
 import com.maria.finance.user.domain.model.UserType;
-import com.maria.finance.user.infrastructure.security.JwtService;
+import com.maria.finance.user.infrastructure.security.UserDetailsAdapter;
 import com.maria.finance.user.presentation.dto.UserRequestDTO;
 import com.maria.finance.user.presentation.dto.UserResponseDTO;
 import io.swagger.v3.oas.annotations.Operation;
-import io.swagger.v3.oas.annotations.Parameter;
 import io.swagger.v3.oas.annotations.security.SecurityRequirement;
 import io.swagger.v3.oas.annotations.tags.Tag;
 import org.springframework.http.ResponseEntity;
+import org.springframework.security.core.annotation.AuthenticationPrincipal;
 import org.springframework.web.bind.annotation.*;
 
 import java.util.List;
@@ -23,23 +23,27 @@ import java.util.Map;
 public class UserController {
 
     private final UserApplicationService service;
-    private final JwtService jwt;
 
-    public UserController(UserApplicationService service, JwtService jwt) {
+    public UserController(UserApplicationService service) {
         this.service = service;
-        this.jwt = jwt;
+    }
+
+    // 🔥 Método auxiliar (evita repetição)
+    private User getRequester(UserDetailsAdapter userDetails) {
+        if (userDetails == null) {
+            throw new RuntimeException("Usuário não autenticado");
+        }
+        return userDetails.getDomainUser();
     }
 
     @Operation(summary = "Buscar usuário por ID")
     @GetMapping("/{id}")
     public ResponseEntity<UserResponseDTO> findById(
-            @Parameter(name = "id", description = "ID do usuário", example = "1", required = true)
-            @PathVariable("id") Long id,
-
-            @Parameter(description = "Token JWT no formato: Bearer {token}", required = true)
-            @RequestHeader("Authorization") String authHeader
+            @PathVariable Long id,
+            @AuthenticationPrincipal UserDetailsAdapter userDetails
     ) {
-        User requester = jwt.getUserFromHeader(authHeader);
+        User requester = getRequester(userDetails);
+
         User found = service.findById(id, requester);
         return ResponseEntity.ok(UserResponseDTO.fromDomain(found));
     }
@@ -47,10 +51,9 @@ public class UserController {
     @Operation(summary = "Listar usuários")
     @GetMapping
     public ResponseEntity<List<UserResponseDTO>> list(
-            @Parameter(description = "Token JWT no formato: Bearer {token}", required = true)
-            @RequestHeader("Authorization") String authHeader
+            @AuthenticationPrincipal UserDetailsAdapter userDetails
     ) {
-        User requester = jwt.getUserFromHeader(authHeader);
+        User requester = getRequester(userDetails);
 
         List<UserResponseDTO> response = service.list(requester)
                 .stream()
@@ -63,13 +66,11 @@ public class UserController {
     @Operation(summary = "Deletar usuário")
     @DeleteMapping("/{id}")
     public ResponseEntity<Void> delete(
-            @Parameter(name = "id", description = "ID do usuário a ser removido", example = "10", required = true)
-            @PathVariable("id") Long id,
-
-            @Parameter(description = "Token JWT no formato: Bearer {token}", required = true)
-            @RequestHeader("Authorization") String authHeader
+            @PathVariable Long id,
+            @AuthenticationPrincipal UserDetailsAdapter userDetails
     ) {
-        User requester = jwt.getUserFromHeader(authHeader);
+        User requester = getRequester(userDetails);
+
         service.delete(id, requester);
         return ResponseEntity.noContent().build();
     }
@@ -77,15 +78,11 @@ public class UserController {
     @Operation(summary = "Atualizar usuário")
     @PutMapping("/{id}")
     public ResponseEntity<UserResponseDTO> update(
-            @Parameter(name = "id", description = "ID do usuário a ser atualizado", example = "10", required = true)
-            @PathVariable("id") Long id,
-
+            @PathVariable Long id,
             @RequestBody UserRequestDTO dto,
-
-            @Parameter(description = "Token JWT no formato: Bearer {token}", required = true)
-            @RequestHeader("Authorization") String authHeader
+            @AuthenticationPrincipal UserDetailsAdapter userDetails
     ) {
-        User requester = jwt.getUserFromHeader(authHeader);
+        User requester = getRequester(userDetails);
 
         User data = new User();
         data.setName(dto.name());
@@ -94,22 +91,17 @@ public class UserController {
         data.setType(dto.type());
 
         User updated = service.update(id, data, requester);
-
         return ResponseEntity.ok(UserResponseDTO.fromDomain(updated));
     }
 
     @Operation(summary = "Atualizar role (ADMIN)")
     @PatchMapping("/{id}/role")
     public ResponseEntity<UserResponseDTO> updateRole(
-            @Parameter(name = "id", description = "ID do usuário", example = "10", required = true)
-            @PathVariable("id") Long id,
-
+            @PathVariable Long id,
             @RequestBody Map<String, String> body,
-
-            @Parameter(description = "Token JWT no formato: Bearer {token}", required = true)
-            @RequestHeader("Authorization") String authHeader
+            @AuthenticationPrincipal UserDetailsAdapter userDetails
     ) {
-        User requester = jwt.getUserFromHeader(authHeader);
+        User requester = getRequester(userDetails);
 
         UserType newType = UserType.valueOf(body.get("type").toUpperCase());
 
@@ -120,17 +112,12 @@ public class UserController {
     @Operation(summary = "Reativar usuário (somente ADMIN)")
     @PatchMapping("/{id}/reactivate")
     public ResponseEntity<UserResponseDTO> reactivate(
-            @Parameter(name = "id", description = "ID do usuário a ser reativado", example = "10", required = true)
-            @PathVariable("id") Long id,
-
-            @Parameter(description = "Token JWT no formato: Bearer {token}", required = true)
-            @RequestHeader("Authorization") String authHeader
+            @PathVariable Long id,
+            @AuthenticationPrincipal UserDetailsAdapter userDetails
     ) {
-        User requester = jwt.getUserFromHeader(authHeader);
+        User requester = getRequester(userDetails);
 
         User reactivated = service.reactivate(id, requester);
-
         return ResponseEntity.ok(UserResponseDTO.fromDomain(reactivated));
     }
-
 }

@@ -1,7 +1,7 @@
 package com.finance.analytics_service.infrastructure.kafka;
 
 import com.fasterxml.jackson.databind.ObjectMapper;
-import com.finance.analytics_service.application.service.AnalysisApplicationService;
+import com.finance.analytics_service.AnalysisApplicationService;
 import com.finance.analytics_service.infrastructure.kafka.dto.TransactionEventDTO;
 import com.finance.analytics_service.infrastructure.persistence.entity.ExpenseEntity;
 import jakarta.validation.ConstraintViolation;
@@ -23,7 +23,7 @@ public class TransactionConsumer {
         this.useCase = useCase;
     }
 
-    @KafkaListener(topics = "transactions", groupId = "analysis-service")
+    @KafkaListener(topics = "transaction.created", groupId = "analysis-service")
     public void consume(String payload) {
         try {
             TransactionEventDTO event = mapper.readValue(payload, TransactionEventDTO.class);

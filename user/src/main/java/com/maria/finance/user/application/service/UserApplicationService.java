@@ -14,6 +14,9 @@ import java.util.Optional;
 @Service
 public class UserApplicationService {
 
+    private final UserRepository repository;
+    private final PasswordEncoder passwordEncoder;
+
     private final CreateUserUseCase create;
     private final ListUsersUseCase list;
     private final DeleteUserUseCase delete;
@@ -23,26 +26,30 @@ public class UserApplicationService {
     private final UpdateUserRoleUseCase updateRole;
     private final ReactivateUserUseCase reactivate;
 
-
     public UserApplicationService(UserRepository repository, PasswordEncoder passwordEncoder) {
-        this.create = new CreateUserUseCase(repository);
+        this.repository = repository;
+        this.passwordEncoder = passwordEncoder;
+
+        this.create = new CreateUserUseCase(repository, passwordEncoder);
         this.list = new ListUsersUseCase(repository);
         this.delete = new DeleteUserUseCase(repository);
-        this.update = new UpdateUserUseCase(repository);
+        this.update = new UpdateUserUseCase(repository, passwordEncoder);
         this.findByEmail = new FindUserByEmailUseCase(repository);
         this.findById = new FindUserByIdUseCase(repository);
         this.updateRole = new UpdateUserRoleUseCase(repository);
         this.reactivate = new ReactivateUserUseCase(repository);
-
     }
 
-    // ✅ REGRA CORRETA: valida senha CRUA e só depois criptografa
     public User create(User user) {
-        create.execute(user); // valida email + senha fraca + duplicado
 
+        // valida regras
+        create.execute(user);
 
+        // 🔐 criptografa senha
+        user.setPassword(passwordEncoder.encode(user.getPassword()));
 
-        return user;
+        // 💾 salva
+        return repository.save(user);
     }
 
     public List<User> list(User requester) {
@@ -82,7 +89,4 @@ public class UserApplicationService {
     public User reactivate(Long id, User requester) {
         return reactivate.execute(id, requester);
     }
-
-
-
 }

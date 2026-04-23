@@ -24,68 +24,40 @@ public class JwtAuthenticationFilter extends OncePerRequestFilter {
                                     FilterChain filterChain)
             throws ServletException, IOException {
 
-        String uri = request.getRequestURI();
-
-        // 🔥 Ignorar H2 e Swagger
-        if (uri.startsWith("/h2-console")
-                || uri.startsWith("/favicon.ico")
-                || uri.startsWith("/v3/api-docs")
-                || uri.startsWith("/swagger-ui")) {
-
-            filterChain.doFilter(request, response);
-            return;
-        }
-
-        System.out.println("==== FILTRO JWT EXECUTADO ====");
-        System.out.println("URI: " + uri);
-
         String header = request.getHeader("Authorization");
-        System.out.println("Authorization Header: " + (header != null ? "Presente" : "Ausente"));
 
         if (header != null && header.startsWith("Bearer ")) {
 
             String token = header.substring(7);
-            System.out.println("Token extraído: " + token.substring(0, Math.min(20, token.length())) + "...");
 
             try {
                 if (tokenProvider.validateToken(token)) {
-                    System.out.println("✅ Token válido!");
 
                     String username = tokenProvider.getUsername(token);
                     String role = tokenProvider.getRole(token);
                     Long userId = tokenProvider.getId(token);
 
-                    System.out.println("Username: " + username);
-                    System.out.println("Role: " + role);
-                    System.out.println("User ID: " + userId);
+                    if (username != null && role != null && userId != null) {
 
-                    if (username != null && !username.isEmpty() && role != null && !role.isEmpty() && userId != null) {
-                        // Criar CustomUserDetails com id, username e role
-                        CustomUserDetails userDetails = new CustomUserDetails(userId, username, role);
-
-                        System.out.println("CustomUserDetails criado com ID: " + userId + ", Username: " + username + ", Role: " + role);
+                        CustomUserDetails userDetails =
+                                new CustomUserDetails(userId, username, role);
 
                         UsernamePasswordAuthenticationToken authentication =
                                 new UsernamePasswordAuthenticationToken(
-                                        userDetails,  // Usar CustomUserDetails como principal
+                                        userDetails,
                                         null,
                                         userDetails.getAuthorities()
                                 );
 
                         SecurityContextHolder.getContext().setAuthentication(authentication);
-                        System.out.println("✅ Autenticação configurada no SecurityContext com CustomUserDetails");
-                    } else {
-                        System.err.println("❌ Username, Role ou ID nulo/vazio. Username: " + username + ", Role: " + role + ", ID: " + userId);
+
+                        // 🔍 DEBUG (pode remover depois)
+                        System.out.println("AUTH OK: " + userDetails.getAuthorities());
                     }
-                } else {
-                    System.err.println("❌ Token inválido ou expirado!");
                 }
             } catch (Exception e) {
-                System.err.println("❌ Erro ao validar token: " + e.getMessage());
-                e.printStackTrace();
+                System.err.println("Erro ao validar token: " + e.getMessage());
             }
-        } else {
-            System.out.println("⚠️  Nenhum token Bearer encontrado no header");
         }
 
         filterChain.doFilter(request, response);
