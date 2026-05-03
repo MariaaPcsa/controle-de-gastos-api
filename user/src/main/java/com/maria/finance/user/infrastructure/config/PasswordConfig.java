@@ -1,4 +1,4 @@
-package com.maria.finance.user.infrastructure.security;
+package com.maria.finance.user.infrastructure.config;
 
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;

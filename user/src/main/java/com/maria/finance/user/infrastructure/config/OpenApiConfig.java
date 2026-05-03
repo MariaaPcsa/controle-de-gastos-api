@@ -1,4 +1,4 @@
-package com.maria.finance.user.infrastructure.security;
+package com.maria.finance.user.infrastructure.config;
 
 import io.swagger.v3.oas.models.Components;
 import io.swagger.v3.oas.models.OpenAPI;

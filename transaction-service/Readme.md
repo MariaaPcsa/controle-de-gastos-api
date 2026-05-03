@@ -16,7 +16,7 @@ Este módulo é responsável pelo **CRUD de transações** (despesas e receitas)
 
 ## Endpoints (planejados)
 
-http://localhost:8082/swagger-ui.html
+http://localhost:8083/swagger-ui.html
 
 mais senha 
 
@@ -35,6 +35,28 @@ mais senha
 3. Adicionar testes automatizados  
 4. Adicionar documentação Swagger  
 5. Conectar com `analytics-service`
+
+## Rodando em desenvolvimento
+
+Para evitar problemas de resolução de host entre container e host, adicionamos dois profiles:
+
+- `local` — usa `localhost:5433` para Postgres (útil quando o Postgres está rodando via docker-compose e você executa a aplicação localmente)
+- `docker` — usa `postgres:5432` (útil quando a aplicação roda dentro do Docker Compose)
+
+Comandos PowerShell:
+
+# Subir infra (Postgres/Kafka) via docker-compose
+docker compose -f .\docker-compose.transactions.yml up -d
+
+# Rodar a aplicação localmente conectando ao Postgres do container (use profile local)
+$env:SPRING_PROFILES_ACTIVE = "local"; mvn spring-boot:run
+
+# Ou passar como argumento
+mvn spring-boot:run -Dspring-boot.run.arguments="--spring.profiles.active=local"
+
+# Rodar tudo via Docker Compose (a aplicação usará o profile docker quando for necessário via variáveis de ambiente)
+# Nota: o serviço `transaction-service` no docker-compose já referencia jdbc://postgres:5432
+docker compose -f .\docker-compose.transactions.yml up --build
 
 Para rodar H2:
 

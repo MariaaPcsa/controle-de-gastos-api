@@ -1,17 +1,27 @@
 package com.maria.finance.user.presentation.dto;
 
 import com.maria.finance.user.domain.model.User;
+import jakarta.validation.constraints.Email;
 
 public record UserUpdateDTO(
+
         String name,
+
+        @Email(message = "Email inválido")
         String email
+
 ) {
-    // Converte o DTO para um objeto User parcial (apenas com os campos que podem ser alterados)
     public User toDomain() {
         User user = new User();
-        user.setName(this.name);
-        user.setEmail(this.email);
+
+        if (this.name != null) {
+            user.setName(this.name);
+        }
+
+        if (this.email != null) {
+            user.setEmail(this.email);
+        }
+
         return user;
     }
 }
-

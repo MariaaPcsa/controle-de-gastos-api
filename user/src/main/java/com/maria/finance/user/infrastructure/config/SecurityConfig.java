@@ -1,5 +1,6 @@
-package com.maria.finance.user.infrastructure.security;
+package com.maria.finance.user.infrastructure.config;
 
+import com.maria.finance.user.infrastructure.security.JwtAuthenticationFilter;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
 import org.springframework.security.config.annotation.web.configuration.EnableWebSecurity;

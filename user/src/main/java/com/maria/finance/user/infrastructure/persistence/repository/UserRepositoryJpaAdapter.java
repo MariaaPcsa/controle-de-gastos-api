@@ -49,6 +49,7 @@ public class UserRepositoryJpaAdapter implements UserRepository {
     }
 
     // DELETE LÓGICO (ok manter aqui)
+    @Override
     public void delete(User user) {
         UserEntity entity = jpaRepository.findById(user.getId())
                 .orElseThrow(() -> new RuntimeException("Usuário não encontrado no banco"));

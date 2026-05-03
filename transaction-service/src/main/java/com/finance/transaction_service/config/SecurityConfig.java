@@ -22,59 +22,48 @@ public class SecurityConfig {
     public SecurityFilterChain filterChain(HttpSecurity http) throws Exception {
 
         http
-                .csrf(csrf -> csrf
-                        .ignoringRequestMatchers("/h2-console/**")
-                        .disable())
+                .csrf(csrf -> csrf.disable())
 
                 .headers(headers ->
-                        headers.frameOptions(frame -> frame.disable()))
+                        headers.frameOptions(frame -> frame.disable())
+                )
 
                 .sessionManagement(session ->
-                        session.sessionCreationPolicy(SessionCreationPolicy.STATELESS))
+                        session.sessionCreationPolicy(SessionCreationPolicy.STATELESS)
+                )
 
-                // 🔐 Configurar autorização de endpoints
                 .authorizeHttpRequests(auth -> auth
-                        // Endpoints públicos (sem autenticação)
                         .requestMatchers(
+                                "/auth/**",
                                 "/h2-console/**",
-                                "/favicon.ico",
                                 "/v3/api-docs/**",
-                                "/swagger-ui/**",
-                                "/swagger-ui.html",
-                                "/swagger-resources/**",
-                                "/webjars/**"
+                                "/swagger-ui/**"
                         ).permitAll()
 
-                        // Endpoints que requerem autenticação com role
+                        // 🔥 Agora funciona porque ROLE_ está correto
                         .requestMatchers("/api/transactions/**")
                         .hasAnyRole("USER", "ADMIN")
 
-                        // Qualquer outra requisição requer autenticação
                         .anyRequest().authenticated()
                 )
 
-                // 🔐 Adicionar filter JWT ANTES do UsernamePasswordAuthenticationFilter
                 .addFilterBefore(
                         new JwtAuthenticationFilter(tokenProvider),
                         UsernamePasswordAuthenticationFilter.class
                 )
 
-                // Tratamento de exceções de autenticação
                 .exceptionHandling(exception ->
-                    exception
-                        .authenticationEntryPoint((request, response, authException) -> {
-                            System.err.println("❌ Falha de autenticação: " + authException.getMessage());
-                            response.setStatus(401);
-                            response.getWriter().write("{\"error\": \"Não autenticado\"}");
-                        })
-                        .accessDeniedHandler((request, response, accessDeniedException) -> {
-                            System.err.println("❌ Acesso negado: " + accessDeniedException.getMessage());
-                            response.setStatus(403);
-                            response.getWriter().write("{\"error\": \"Acesso negado\"}");
-                        })
+                        exception
+                                .authenticationEntryPoint((req, res, ex) -> {
+                                    res.setStatus(401);
+                                    res.getWriter().write("{\"error\": \"Não autenticado\"}");
+                                })
+                                .accessDeniedHandler((req, res, ex) -> {
+                                    res.setStatus(403);
+                                    res.getWriter().write("{\"error\": \"Acesso negado\"}");
+                                })
                 );
 
         return http.build();
     }
 }
-

@@ -2,11 +2,12 @@ package com.maria.finance.user.infrastructure.persistence.entity;
 
 import com.maria.finance.user.domain.model.UserType;
 import jakarta.persistence.*;
-
+import org.hibernate.annotations.SQLDelete;
 import java.time.LocalDateTime;
 
 @Entity
 @Table(name = "users")
+@SQLDelete(sql = "UPDATE users SET active = false WHERE id = ?")
 public class UserEntity {
 
     @Id

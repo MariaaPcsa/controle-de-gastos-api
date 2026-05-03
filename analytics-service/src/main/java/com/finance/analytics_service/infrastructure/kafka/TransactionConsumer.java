@@ -23,7 +23,7 @@ public class TransactionConsumer {
         this.useCase = useCase;
     }
 
-    @KafkaListener(topics = "transactions", groupId = "analysis-service")
+    @KafkaListener(topics = "transaction.created", groupId = "analysis-service")
     public void consume(String payload) {
         try {
             TransactionEventDTO event = mapper.readValue(payload, TransactionEventDTO.class);
