@@ -14,6 +14,11 @@ public class FindUserByEmailUseCase {
     }
 
     public Optional<User> execute(String email) {
-        return repository.findByEmail(email);
+
+        if (email == null || email.isBlank()) {
+            throw new IllegalArgumentException("Email não pode ser vazio");
+        }
+
+        return repository.findByEmail(email.toLowerCase().trim());
     }
 }

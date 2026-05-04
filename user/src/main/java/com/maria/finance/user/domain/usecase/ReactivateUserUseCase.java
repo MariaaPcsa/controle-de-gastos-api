@@ -3,6 +3,8 @@ package com.maria.finance.user.domain.usecase;
 import com.maria.finance.user.domain.model.User;
 import com.maria.finance.user.domain.repository.UserRepository;
 
+import java.util.UUID;
+
 public class ReactivateUserUseCase {
 
     private final UserRepository repository;
@@ -11,7 +13,12 @@ public class ReactivateUserUseCase {
         this.repository = repository;
     }
 
-    public User execute(Long id, User requester) {
+    public User execute(UUID id, User requester) {
+
+        if (requester == null) {
+            throw new IllegalArgumentException("Usuário não autenticado");
+        }
+
         if (!requester.isAdmin()) {
             throw new RuntimeException("Apenas ADMIN pode reativar usuários");
         }
@@ -23,8 +30,8 @@ public class ReactivateUserUseCase {
             throw new RuntimeException("Usuário já está ativo");
         }
 
-        user.setActive(true);   // 🔁 reativa
+        user.setActive(true);
+
         return repository.save(user);
     }
 }
-

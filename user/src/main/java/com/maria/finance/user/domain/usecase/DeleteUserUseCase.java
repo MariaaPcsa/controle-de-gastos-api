@@ -5,6 +5,8 @@ import com.maria.finance.user.domain.repository.UserRepository;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
+import java.util.UUID;
+
 @Service
 @Transactional
 public class DeleteUserUseCase {
@@ -15,7 +17,8 @@ public class DeleteUserUseCase {
         this.repository = repository;
     }
 
-    public void execute(Long id, User requester) {
+    public void execute(UUID id, User requester) {
+
         if (requester == null) {
             throw new IllegalArgumentException("Requisição não autenticada");
         }
@@ -28,11 +31,9 @@ public class DeleteUserUseCase {
                 .orElseThrow(() -> new IllegalArgumentException("Usuário não encontrado"));
 
         if (!user.isActive()) {
-            // já inativo - idempotência
-            return;
+            return; // idempotência
         }
 
-        // delega a implementação do delete (soft-delete) ao repositório
         user.setActive(false);
         repository.save(user);
     }

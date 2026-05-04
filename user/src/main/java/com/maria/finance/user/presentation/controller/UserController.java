@@ -15,11 +15,12 @@ import org.springframework.web.bind.annotation.*;
 
 import java.util.List;
 import java.util.Map;
+import java.util.UUID;
 
 @Tag(name = "Users", description = "Endpoints de usuários")
 @RestController
-@SecurityRequirement(name = "bearerAuth")
 @RequestMapping("/api/users")
+@SecurityRequirement(name = "bearerAuth")
 public class UserController {
 
     private final UserApplicationService service;
@@ -28,7 +29,6 @@ public class UserController {
         this.service = service;
     }
 
-    // 🔥 Método auxiliar (evita repetição)
     private User getRequester(UserDetailsAdapter userDetails) {
         if (userDetails == null) {
             throw new RuntimeException("Usuário não autenticado");
@@ -36,10 +36,10 @@ public class UserController {
         return userDetails.getDomainUser();
     }
 
-    @Operation(summary = "Buscar usuário por ID")
     @GetMapping("/{id}")
+    @Operation(summary = "Buscar usuário por ID")
     public ResponseEntity<UserResponseDTO> findById(
-            @PathVariable Long id,
+            @PathVariable UUID id,
             @AuthenticationPrincipal UserDetailsAdapter userDetails
     ) {
         User requester = getRequester(userDetails);
@@ -48,8 +48,8 @@ public class UserController {
         return ResponseEntity.ok(UserResponseDTO.fromDomain(found));
     }
 
-    @Operation(summary = "Listar usuários")
     @GetMapping
+    @Operation(summary = "Listar usuários")
     public ResponseEntity<List<UserResponseDTO>> list(
             @AuthenticationPrincipal UserDetailsAdapter userDetails
     ) {
@@ -63,22 +63,28 @@ public class UserController {
         return ResponseEntity.ok(response);
     }
 
-    @Operation(summary = "Deletar usuário")
-    @DeleteMapping("/{id}")
-    public ResponseEntity<Void> delete(
-            @PathVariable Long id,
+    @PostMapping
+    @Operation(summary = "Criar usuário")
+    public ResponseEntity<UserResponseDTO> create(
+            @RequestBody UserRequestDTO dto,
             @AuthenticationPrincipal UserDetailsAdapter userDetails
     ) {
         User requester = getRequester(userDetails);
 
-        service.delete(id, requester);
-        return ResponseEntity.noContent().build();
+        User user = new User();
+        user.setName(dto.name());
+        user.setEmail(dto.email());
+        user.setPassword(dto.password());
+        user.setType(dto.type());
+
+        User created = service.create(user);
+        return ResponseEntity.ok(UserResponseDTO.fromDomain(created));
     }
 
-    @Operation(summary = "Atualizar usuário")
     @PutMapping("/{id}")
+    @Operation(summary = "Atualizar usuário")
     public ResponseEntity<UserResponseDTO> update(
-            @PathVariable Long id,
+            @PathVariable UUID id,
             @RequestBody UserRequestDTO dto,
             @AuthenticationPrincipal UserDetailsAdapter userDetails
     ) {
@@ -94,25 +100,37 @@ public class UserController {
         return ResponseEntity.ok(UserResponseDTO.fromDomain(updated));
     }
 
-    @Operation(summary = "Atualizar role (ADMIN)")
+    @DeleteMapping("/{id}")
+    @Operation(summary = "Deletar usuário")
+    public ResponseEntity<Void> delete(
+            @PathVariable UUID id,
+            @AuthenticationPrincipal UserDetailsAdapter userDetails
+    ) {
+        User requester = getRequester(userDetails);
+
+        service.delete(id, requester);
+        return ResponseEntity.noContent().build();
+    }
+
     @PatchMapping("/{id}/role")
+    @Operation(summary = "Atualizar role")
     public ResponseEntity<UserResponseDTO> updateRole(
-            @PathVariable Long id,
+            @PathVariable UUID id,
             @RequestBody Map<String, String> body,
             @AuthenticationPrincipal UserDetailsAdapter userDetails
     ) {
         User requester = getRequester(userDetails);
 
-        UserType newType = UserType.valueOf(body.get("type").toUpperCase());
+        UserType type = UserType.valueOf(body.get("type").toUpperCase());
 
-        User updated = service.updateRole(id, newType, requester);
+        User updated = service.updateRole(id, type, requester);
         return ResponseEntity.ok(UserResponseDTO.fromDomain(updated));
     }
 
-    @Operation(summary = "Reativar usuário (somente ADMIN)")
     @PatchMapping("/{id}/reactivate")
+    @Operation(summary = "Reativar usuário")
     public ResponseEntity<UserResponseDTO> reactivate(
-            @PathVariable Long id,
+            @PathVariable UUID id,
             @AuthenticationPrincipal UserDetailsAdapter userDetails
     ) {
         User requester = getRequester(userDetails);

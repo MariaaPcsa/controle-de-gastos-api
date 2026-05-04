@@ -18,4 +18,4 @@ spring:
     bootstrap-servers: localhost:9092
 
 jwt:
-  secret: ${JWT_SECRET:minha-chave-super-secreta-de-32-bytes-ou-mais}
+  secret: ${JWT_SECRET:dev-secret-123456789012345678901234567890}

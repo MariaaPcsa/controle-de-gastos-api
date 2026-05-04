@@ -3,7 +3,9 @@ package com.maria.finance.user.infrastructure.persistence.entity;
 import com.maria.finance.user.domain.model.UserType;
 import jakarta.persistence.*;
 import org.hibernate.annotations.SQLDelete;
+
 import java.time.LocalDateTime;
+import java.util.UUID;
 
 @Entity
 @Table(name = "users")
@@ -11,8 +13,8 @@ import java.time.LocalDateTime;
 public class UserEntity {
 
     @Id
-    @GeneratedValue(strategy = GenerationType.IDENTITY)
-    private Long id;
+    @GeneratedValue(strategy = GenerationType.UUID)
+    private UUID id;
 
     @Column(nullable = false, length = 150)
     private String name;
@@ -36,38 +38,28 @@ public class UserEntity {
     @Column(nullable = false)
     private LocalDateTime updatedAt;
 
-    // ✅ Construtor padrão (JPA)
     public UserEntity() {}
 
-    // 🔥 Garante valores antes de salvar
     @PrePersist
     public void prePersist() {
         LocalDateTime now = LocalDateTime.now();
         this.createdAt = now;
         this.updatedAt = now;
 
-        if (this.active == null) {
-            this.active = true;
-        }
-
-        if (this.type == null) {
-            this.type = UserType.USER; // 🔒 segurança por padrão
-        }
+        if (this.active == null) this.active = true;
+        if (this.type == null) this.type = UserType.USER;
     }
 
-    // 🔥 Atualiza updatedAt automaticamente
     @PreUpdate
     public void preUpdate() {
         this.updatedAt = LocalDateTime.now();
-
-        if (this.active == null) {
-            this.active = true; // nunca deixar null
-        }
+        if (this.active == null) this.active = true;
     }
 
     // GETTERS E SETTERS
-    public Long getId() { return id; }
-    public void setId(Long id) { this.id = id; }
+
+    public UUID getId() { return id; }
+    public void setId(UUID id) { this.id = id; }
 
     public String getName() { return name; }
     public void setName(String name) { this.name = name; }

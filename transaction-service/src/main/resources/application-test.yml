@@ -25,3 +25,11 @@ spring:
     console:
       enabled: true
       path: /h2-console
+
+  kafka:
+    bootstrap-servers: ${spring.embedded.kafka.brokers}
+
+# 🔥 ESSENCIAL (faltava isso)
+jwt:
+  secret: test-secret-12345678901234567890
+  expiration: 3600000

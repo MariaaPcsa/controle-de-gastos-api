@@ -1,0 +1,22 @@
+.env
+.env.example
+# Maven / target
+**/target/
+**/*.iml
+.idea/
+# logs
+logs/
+*.log
+
+# OS
+Thumbs.db
+.DS_Store
+
+# IDE
+.vscode/
+mvn_transaction_import_test.log
+mvn_transaction_import_test.log
+transaction_import_test_full.log
+.github
+
+

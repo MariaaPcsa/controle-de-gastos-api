@@ -20,5 +20,7 @@ spring:
   kafka:
     bootstrap-servers: localhost:9092
 
+# 🔥 CORREÇÃO AQUI
 jwt:
-  expiration: 3600000
+  secret: ${JWT_SECRET:dev-secret-123456789012345678901234567890}
+  expiration: ${JWT_EXPIRATION:3600000}
