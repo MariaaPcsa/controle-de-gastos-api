@@ -27,6 +27,13 @@
 
 
 
+
+
+
+
+
+
+
 🧩 Microserviços
 👤 User Service → gerenciamento de usuários e autenticação
 💳 Transaction Service → gerenciamento de transações financeiras
