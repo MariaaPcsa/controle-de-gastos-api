@@ -1,5 +1,7 @@
 💰 Sobre o Serviço
 🧱 Arquitetura do Sistema
+
+
                 ┌──────────────────────┐
                 │     API GATEWAY      │
                 │ Spring Cloud Gateway │
@@ -21,6 +23,10 @@
               ┌──────────▼──────────┐
               │ ANALYTICS CONSUMER  │
               └──────────────────────┘
+
+
+
+
 🧩 Microserviços
 👤 User Service → gerenciamento de usuários e autenticação
 💳 Transaction Service → gerenciamento de transações financeiras
