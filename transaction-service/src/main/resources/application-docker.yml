@@ -13,19 +13,28 @@ spring:
     hibernate:
       ddl-auto: update
     database-platform: org.hibernate.dialect.PostgreSQLDialect
+    show-sql: false
 
   kafka:
     bootstrap-servers: kafka:9092
+    consumer:
+      group-id: transaction-service-group
+      auto-offset-reset: earliest
 
 external:
   brasilapi:
     url: ${BRASILAPI_URL:https://brasilapi.com.br/api}
   mockbank:
-    url: ${MOCKBANK_URL:https://mockbank.local}
+    url: ${MOCKBANK_URL:http://mockbank:8080} # 🔥 ajuste importante para docker
 
 jwt:
-  secret: ${JWT_SECRET:replace_with_secure_secret_please}
-  expiration: 3600000
+  secret: ${JWT_SECRET:dev-secret-123456789012345678901234567890}
+  expiration: ${JWT_EXPIRATION:3600000}
 
 server:
   port: 8002
+
+logging:
+  level:
+    org.springframework: INFO
+    org.apache.kafka: WARN

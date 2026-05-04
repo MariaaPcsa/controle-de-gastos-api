@@ -4,6 +4,18 @@ Este módulo é responsável pelo **CRUD de transações** (despesas e receitas)
 
 ⚠️ **Status:** Em desenvolvimento — ainda não há implementação publicada nesta pasta.
 
+
+
+acessar o banco via terminal (mais rápido)
+docker exec -it controle-de-gastos-api-postgres-tx-1 psql -U postgres -d tx_db
+1. Ver tabelas
+   \dt
+2. 👀 2. Ver estrutura da tabela
+   \d transactions
+3. 📊 3. Ver dados (admin seed)
+   SELECT * FROM transactions;
+
+
 ## Funcionalidades planejadas
 
 - 📌 Listar todas as transações  
@@ -16,7 +28,7 @@ Este módulo é responsável pelo **CRUD de transações** (despesas e receitas)
 
 ## Endpoints (planejados)
 
-http://localhost:8083/swagger-ui.html
+http://localhost:8002/swagger-ui/index.html
 
 mais senha 
 

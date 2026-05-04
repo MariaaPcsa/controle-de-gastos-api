@@ -4,6 +4,8 @@ import com.maria.finance.user.domain.model.User;
 import com.maria.finance.user.domain.repository.UserRepository;
 import com.maria.finance.user.infrastructure.exception.ResourceNotFoundException;
 
+import java.util.UUID;
+
 public class FindUserByIdUseCase {
 
     private final UserRepository repository;
@@ -12,7 +14,11 @@ public class FindUserByIdUseCase {
         this.repository = repository;
     }
 
-    public User execute(Long id, User requester) {
+    public User execute(UUID id, User requester) {
+
+        if (requester == null) {
+            throw new RuntimeException("Usuário não autenticado");
+        }
 
         // 🔒 USER só pode acessar o próprio ID
         if (!requester.isAdmin() && !requester.getId().equals(id)) {
@@ -22,7 +28,7 @@ public class FindUserByIdUseCase {
         User user = repository.findById(id)
                 .orElseThrow(() -> new ResourceNotFoundException("Usuário não encontrado"));
 
-        // 🔥 bloqueia acesso a usuário desativado
+        // 🔥 bloqueia usuário desativado
         if (!Boolean.TRUE.equals(user.getActive())) {
             throw new RuntimeException("Usuário está desativado");
         }
@@ -30,4 +36,3 @@ public class FindUserByIdUseCase {
         return user;
     }
 }
-

@@ -15,11 +15,16 @@ public class ListUsersUseCase {
 
     public List<User> execute(User requester) {
 
-        if (requester.isAdmin()) {
-            return repository.findAll().stream()
-                    .toList();
+        if (requester == null) {
+            throw new IllegalArgumentException("Usuário não autenticado");
         }
 
+        // 🔥 ADMIN vê todos os usuários
+        if (requester.isAdmin()) {
+            return repository.findAll();
+        }
+
+        // 🔒 USER comum só pode ver ele mesmo
         User self = repository.findById(requester.getId())
                 .orElseThrow(() -> new RuntimeException("Usuário não encontrado"));
 

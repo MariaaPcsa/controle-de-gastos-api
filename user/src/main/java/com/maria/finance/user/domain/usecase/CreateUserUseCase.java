@@ -23,19 +23,20 @@ public class CreateUserUseCase {
 
     public User execute(User user) {
 
-        // ✅ valida email
         validateEmail(user.getEmail());
 
-        // 🔒 verifica duplicidade
         repository.findByEmail(user.getEmail())
                 .ifPresent(u -> {
                     throw new RuntimeException("Email já cadastrado");
                 });
 
-        // 🔐 CRIPTOGRAFIA (AQUI É O PONTO CRÍTICO)
+        if (user.getPassword() == null || user.getPassword().isBlank()) {
+            throw new RuntimeException("Senha obrigatória");
+        }
+
+        // 🔐 ÚNICO PONTO DE CRIPTOGRAFIA
         user.setPassword(passwordEncoder.encode(user.getPassword()));
 
-        // 💾 salva
         return repository.save(user);
     }
 }

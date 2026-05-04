@@ -4,12 +4,12 @@ import com.maria.finance.user.domain.model.User;
 import com.maria.finance.user.domain.model.UserType;
 import com.maria.finance.user.domain.repository.UserRepository;
 import com.maria.finance.user.domain.usecase.*;
-import jakarta.validation.constraints.NotBlank;
 import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.stereotype.Service;
 
 import java.util.List;
 import java.util.Optional;
+import java.util.UUID;
 
 @Service
 public class UserApplicationService {
@@ -41,30 +41,22 @@ public class UserApplicationService {
     }
 
     public User create(User user) {
-
-        // valida regras
-        create.execute(user);
-
-        // 🔐 criptografa senha
-        user.setPassword(passwordEncoder.encode(user.getPassword()));
-
-        // 💾 salva
-        return repository.save(user);
+        return create.execute(user);
     }
 
     public List<User> list(User requester) {
         return list.execute(requester);
     }
 
-    public User findById(Long id, User requester) {
+    public User findById(UUID id, User requester) {
         return findById.execute(id, requester);
     }
 
-    public void delete(Long id, User requester) {
+    public void delete(UUID id, User requester) {
         delete.execute(id, requester);
     }
 
-    public User update(Long id, User userData, User requester) {
+    public User update(UUID id, User userData, User requester) {
         return update.execute(id, userData, requester);
     }
 
@@ -82,11 +74,11 @@ public class UserApplicationService {
                 .orElseGet(() -> create(user));
     }
 
-    public User updateRole(Long id, UserType newType, User requester) {
+    public User updateRole(UUID id, UserType newType, User requester) {
         return updateRole.updateRole(id, newType, requester);
     }
 
-    public User reactivate(Long id, User requester) {
+    public User reactivate(UUID id, User requester) {
         return reactivate.execute(id, requester);
     }
 }

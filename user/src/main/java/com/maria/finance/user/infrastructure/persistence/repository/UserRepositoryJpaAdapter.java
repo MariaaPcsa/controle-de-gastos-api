@@ -1,16 +1,14 @@
 package com.maria.finance.user.infrastructure.persistence.repository;
 
-
-
 import com.maria.finance.user.domain.model.User;
 import com.maria.finance.user.domain.repository.UserRepository;
 import com.maria.finance.user.infrastructure.persistence.entity.UserEntity;
 import com.maria.finance.user.infrastructure.persistence.mapper.UserMapper;
-import com.maria.finance.user.infrastructure.persistence.repository.UserRepositoryJpa;
 import org.springframework.stereotype.Repository;
 
 import java.util.List;
 import java.util.Optional;
+import java.util.UUID;
 
 @Repository
 public class UserRepositoryJpaAdapter implements UserRepository {
@@ -29,7 +27,7 @@ public class UserRepositoryJpaAdapter implements UserRepository {
     }
 
     @Override
-    public Optional<User> findById(Long id) {
+    public Optional<User> findById(UUID id) {
         return jpaRepository.findById(id)
                 .map(UserMapper::toDomain);
     }
@@ -48,7 +46,6 @@ public class UserRepositoryJpaAdapter implements UserRepository {
                 .toList();
     }
 
-    // DELETE LÓGICO (ok manter aqui)
     @Override
     public void delete(User user) {
         UserEntity entity = jpaRepository.findById(user.getId())

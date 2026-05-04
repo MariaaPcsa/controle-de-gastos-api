@@ -2,7 +2,22 @@
 
 Este README documenta especificamente o serviço de usuários (user) da API de controle de gastos desenvolvida em Java com Spring Boot. Essa parte do projeto é responsável pelo cadastro, autenticação e gerenciamento de usuários da aplicação.
 
-🚀 Sobre o Serviço
+
+Cada serviço possui seu próprio banco PostgreSQL
+
+
+acessar o banco via terminal (mais rápido)
+docker exec -it controle-de-gastos-api-postgres-user-1 psql -U postgres -d user_db
+1. Ver tabelas
+   \dt
+2. 👀 2. Ver estrutura da tabela
+   \d users
+3. 📊 3. Ver dados (admin seed)
+   SELECT * FROM users;
+4. ✍️ 4. Inserir um usuário manual (teste)
+   INSERT INTO users (name, email, password, type)
+   VALUES ('Maria', 'maria@email.com', '123456', 'USER');
+
 
 O módulo user faz parte da arquitetura da Controle de Gastos API, uma REST API para gestão financeira pessoal. O serviço de usuários inclui funcionalidades como:
 
@@ -93,6 +108,7 @@ http://localhost:8080/swagger-ui.html
 ou (dependendo da config do Spring Boot 3):
 
 http://localhost:8080/swagger-ui/index.html
+http://localhost:8081/swagger-ui/index.html
 
 
 Lá você pode:

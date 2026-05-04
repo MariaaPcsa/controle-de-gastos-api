@@ -16,7 +16,7 @@ public class UserMapper {
                 entity.getType()
         );
 
-        user.setActive(entity.getActive()); // 🔥 importante pro soft delete
+        user.setActive(entity.getActive());
         return user;
     }
 
@@ -29,7 +29,7 @@ public class UserMapper {
         entity.setEmail(user.getEmail());
         entity.setPassword(user.getPassword());
         entity.setType(user.getType());
-        entity.setActive(user.getActive()); // 🔥 importante
+        entity.setActive(user.getActive());
 
         return entity;
     }

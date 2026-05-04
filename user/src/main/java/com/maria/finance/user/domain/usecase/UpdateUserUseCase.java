@@ -4,6 +4,8 @@ import com.maria.finance.user.domain.model.User;
 import com.maria.finance.user.domain.repository.UserRepository;
 import org.springframework.security.crypto.password.PasswordEncoder;
 
+import java.util.UUID;
+
 public class UpdateUserUseCase {
 
     private final UserRepository repository;
@@ -14,35 +16,32 @@ public class UpdateUserUseCase {
         this.passwordEncoder = passwordEncoder;
     }
 
-    public User execute(Long id, User data, User requester) {
+    public User execute(UUID id, User data, User requester) {
+
+        if (requester == null) {
+            throw new IllegalArgumentException("Usuário não autenticado");
+        }
 
         User existing = repository.findById(id)
                 .orElseThrow(() -> new RuntimeException("Usuário não encontrado"));
 
-        // 🔒 USER só pode alterar a si mesmo
+        // 🔒 regra de acesso
         if (!requester.isAdmin() && !existing.getId().equals(requester.getId())) {
-            throw new RuntimeException("Você não tem permissão para atualizar este usuário");
+            throw new RuntimeException("Sem permissão");
         }
 
-        // ✔️ Atualizações básicas
-        if (data.getName() != null) {
+        if (data.getName() != null && !data.getName().isBlank()) {
             existing.setName(data.getName());
         }
 
-        if (data.getEmail() != null) {
-            existing.setEmail(data.getEmail());
+        if (data.getEmail() != null && !data.getEmail().isBlank()) {
+            existing.setEmail(data.getEmail().toLowerCase().trim());
         }
 
-        // 🔐 CORREÇÃO PRINCIPAL (senha)
         if (data.getPassword() != null && !data.getPassword().isBlank()) {
-
-            // evita recriptografar senha já criptografada
-            if (!passwordEncoder.matches(data.getPassword(), existing.getPassword())) {
-                existing.setPassword(passwordEncoder.encode(data.getPassword()));
-            }
+            existing.setPassword(passwordEncoder.encode(data.getPassword()));
         }
 
-        // 🔒 SOMENTE ADMIN pode alterar TYPE
         if (requester.isAdmin() && data.getType() != null) {
             existing.setType(data.getType());
         }
