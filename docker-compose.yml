@@ -1,125 +1,267 @@
-version: '3.8'
-
 services:
+
+  # ============================================================
+  # ZOOKEEPER
+  # ============================================================
+
   zookeeper:
     image: confluentinc/cp-zookeeper:7.4.0
+
     environment:
       ZOOKEEPER_CLIENT_PORT: 2181
       ZOOKEEPER_TICK_TIME: 2000
+      ZOOKEEPER_4LW_COMMANDS_WHITELIST: "ruok,stat"
+
     ports:
       - "22181:2181"
+    # healthcheck removed: some base images lack bash/nc causing false unhealthy state
+
+
+  # ============================================================
+  # KAFKA
+  # ============================================================
 
   kafka:
     image: confluentinc/cp-kafka:7.4.0
+
     depends_on:
       - zookeeper
+
     ports:
-      - "29092:9092"
+      - "29092:29092"
+
     environment:
       KAFKA_BROKER_ID: 1
       KAFKA_ZOOKEEPER_CONNECT: zookeeper:2181
 
-      # ESSENCIAL: advertised listeners usam o nome do serviço para clientes internos
+      KAFKA_LISTENERS: PLAINTEXT://0.0.0.0:9092,PLAINTEXT_HOST://0.0.0.0:29092
       KAFKA_ADVERTISED_LISTENERS: PLAINTEXT://kafka:9092,PLAINTEXT_HOST://localhost:29092
       KAFKA_LISTENER_SECURITY_PROTOCOL_MAP: PLAINTEXT:PLAINTEXT,PLAINTEXT_HOST:PLAINTEXT
       KAFKA_INTER_BROKER_LISTENER_NAME: PLAINTEXT
 
       KAFKA_OFFSETS_TOPIC_REPLICATION_FACTOR: 1
+      KAFKA_TRANSACTION_STATE_LOG_REPLICATION_FACTOR: 1
+      KAFKA_TRANSACTION_STATE_LOG_MIN_ISR: 1
+      KAFKA_AUTO_CREATE_TOPICS_ENABLE: "true"
+
     healthcheck:
-      test: ["CMD", "kafka-broker-api-versions.sh", "--bootstrap-server", "localhost:9092"]
+      test: ["CMD-SHELL", "kafka-topics --bootstrap-server kafka:9092 --list"]
       interval: 10s
-      retries: 5
+      timeout: 10s
+      retries: 10
+      start_period: 30s
+
+
+  # ============================================================
+  # POSTGRES - USER
+  # ============================================================
 
   postgres-user:
     image: postgres:14-alpine
+
+    env_file:
+      - .env
+
     environment:
-      - POSTGRES_DB=user_db
-      - POSTGRES_USER=${POSTGRES_USER_USER:-postgres}
-      - POSTGRES_PASSWORD=${POSTGRES_PASSWORD_USER:-maria}
+      POSTGRES_DB: user_db
+      POSTGRES_USER: ${POSTGRES_USER_USER}
+      POSTGRES_PASSWORD: ${POSTGRES_PASSWORD_USER}
+
+    ports:
+      - "5433:5432"
+
     volumes:
       - pgdata_user:/var/lib/postgresql/data
-      - ./user/sql/init.sql:/docker-entrypoint-initdb.d/init-user.sql:ro
+
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U ${POSTGRES_USER_USER} -d user_db"]
+      interval: 5s
+      timeout: 5s
+      retries: 10
+      start_period: 10s
+
+
+  # ============================================================
+  # POSTGRES - TRANSACTION
+  # ============================================================
 
   postgres-tx:
     image: postgres:14-alpine
+
+    env_file:
+      - .env
+
     environment:
-      - POSTGRES_DB=tx_db
-      - POSTGRES_USER=${POSTGRES_USER_TX:-postgres}
-      - POSTGRES_PASSWORD=${POSTGRES_PASSWORD_TX:-maria}
+      POSTGRES_DB: tx_db
+      POSTGRES_USER: ${POSTGRES_USER_TX}
+      POSTGRES_PASSWORD: ${POSTGRES_PASSWORD_TX}
+
+    ports:
+      - "5434:5432"
+
     volumes:
       - pgdata_tx:/var/lib/postgresql/data
-      - ./transaction-service/sql/init.sql:/docker-entrypoint-initdb.d/init-tx.sql:ro
+
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U ${POSTGRES_USER_TX} -d tx_db"]
+      interval: 5s
+      timeout: 5s
+      retries: 10
+      start_period: 10s
+
+
+  # ============================================================
+  # POSTGRES - ANALYTICS
+  # ============================================================
 
   postgres-analytics:
     image: postgres:14-alpine
+
+    env_file:
+      - .env
+
     environment:
-      - POSTGRES_DB=analytics_db
-      - POSTGRES_USER=${POSTGRES_USER_ANALYTICS:-postgres}
-      - POSTGRES_PASSWORD=${POSTGRES_PASSWORD_ANALYTICS:-maria}
+      POSTGRES_DB: analytics_db
+      POSTGRES_USER: ${POSTGRES_USER_ANALYTICS}
+      POSTGRES_PASSWORD: ${POSTGRES_PASSWORD_ANALYTICS}
+
+    ports:
+      - "5435:5432"
+
     volumes:
       - pgdata_analytics:/var/lib/postgresql/data
-      - ./analytics-service/sql/init.sql:/docker-entrypoint-initdb.d/init-analytics.sql:ro
 
-  api-gateway:
-    build:
-      context: ./api-gateway
-    ports:
-      - '8080:8080'
-    environment:
-      - SPRING_PROFILES_ACTIVE=${SPRING_PROFILES_ACTIVE:-docker}
-      - JWT_SECRET=${JWT_SECRET}
-    depends_on:
-      - user
-      - transaction-service
-      - analytics-service
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U ${POSTGRES_USER_ANALYTICS} -d analytics_db"]
+      interval: 5s
+      timeout: 5s
+      retries: 10
+      start_period: 10s
+
+
+  # ============================================================
+  # USER SERVICE
+  # ============================================================
 
   user:
     build:
-      context: ./user
+      context: .
+      dockerfile: user/Dockerfile
+
     ports:
-      - '8001:8001'
+      - "8001:8001"
+
+    env_file:
+      - .env
+
     environment:
-      - SPRING_PROFILES_ACTIVE=${SPRING_PROFILES_ACTIVE:-docker}
-      - JWT_SECRET=${JWT_SECRET}
-      - SPRING_DATASOURCE_URL=jdbc:postgresql://postgres-user:5432/user_db
-      - SPRING_DATASOURCE_USERNAME=${POSTGRES_USER_USER}
-      - SPRING_DATASOURCE_PASSWORD=${POSTGRES_PASSWORD_USER}
-      - KAFKA_BOOTSTRAP_SERVERS=kafka:9092
+      SPRING_PROFILES_ACTIVE: docker
+      SPRING_DATASOURCE_URL: jdbc:postgresql://postgres-user:5432/user_db
+      SPRING_DATASOURCE_USERNAME: ${POSTGRES_USER_USER}
+      SPRING_DATASOURCE_PASSWORD: ${POSTGRES_PASSWORD_USER}
+      KAFKA_BOOTSTRAP_SERVERS: kafka:9092
+      JWT_SECRET: ${JWT_SECRET}
+
     depends_on:
-      - postgres-user
-      - kafka
+      postgres-user:
+        condition: service_healthy
+      kafka:
+        condition: service_healthy
+
+
+  # ============================================================
+  # TRANSACTION SERVICE
+  # ============================================================
 
   transaction-service:
     build:
-      context: ./transaction-service
+      context: .
+      dockerfile: transaction-service/Dockerfile
+
     ports:
-      - '8002:8002'
+      - "8002:8002"
+
+    env_file:
+      - .env
+
     environment:
-      - SPRING_PROFILES_ACTIVE=${SPRING_PROFILES_ACTIVE:-docker}
-      - JWT_SECRET=${JWT_SECRET}
-      - SPRING_DATASOURCE_URL=jdbc:postgresql://postgres-tx:5432/tx_db
-      - SPRING_DATASOURCE_USERNAME=${POSTGRES_USER_TX}
-      - SPRING_DATASOURCE_PASSWORD=${POSTGRES_PASSWORD_TX}
-      - KAFKA_BOOTSTRAP_SERVERS=kafka:9092
+      SPRING_PROFILES_ACTIVE: docker
+      SPRING_DATASOURCE_URL: jdbc:postgresql://postgres-tx:5432/tx_db
+      SPRING_DATASOURCE_USERNAME: ${POSTGRES_USER_TX}
+      SPRING_DATASOURCE_PASSWORD: ${POSTGRES_PASSWORD_TX}
+      KAFKA_BOOTSTRAP_SERVERS: kafka:9092
+      JWT_SECRET: ${JWT_SECRET}
+      BRASILAPI_URL: ${BRASILAPI_URL}
+      MOCKBANK_URL: ${MOCKBANK_URL}
+
     depends_on:
-      - postgres-tx
-      - kafka
+      postgres-tx:
+        condition: service_healthy
+      kafka:
+        condition: service_healthy
+
+
+  # ============================================================
+  # ANALYTICS SERVICE
+  # ============================================================
 
   analytics-service:
     build:
-      context: ./analytics-service
+      context: .
+      dockerfile: analytics-service/Dockerfile
+
     ports:
-      - '8003:8003'
+      - "8003:8003"
+
+    env_file:
+      - .env
+
     environment:
-      - SPRING_PROFILES_ACTIVE=${SPRING_PROFILES_ACTIVE:-docker}
-      - JWT_SECRET=${JWT_SECRET}
-      - SPRING_DATASOURCE_URL=jdbc:postgresql://postgres-analytics:5432/analytics_db
-      - SPRING_DATASOURCE_USERNAME=${POSTGRES_USER_ANALYTICS}
-      - SPRING_DATASOURCE_PASSWORD=${POSTGRES_PASSWORD_ANALYTICS}
-      - KAFKA_BOOTSTRAP_SERVERS=kafka:9092
+      SPRING_PROFILES_ACTIVE: docker
+      SPRING_DATASOURCE_URL: jdbc:postgresql://postgres-analytics:5432/analytics_db
+      SPRING_DATASOURCE_USERNAME: ${POSTGRES_USER_ANALYTICS}
+      SPRING_DATASOURCE_PASSWORD: ${POSTGRES_PASSWORD_ANALYTICS}
+      KAFKA_BOOTSTRAP_SERVERS: kafka:9092
+      JWT_SECRET: ${JWT_SECRET}
+
     depends_on:
-      - postgres-analytics
-      - kafka
+      postgres-analytics:
+        condition: service_healthy
+      kafka:
+        condition: service_healthy
+
+
+  # ============================================================
+  # API GATEWAY
+  # ============================================================
+
+  api-gateway:
+    build:
+      context: .
+      dockerfile: api-gateway/Dockerfile
+
+    ports:
+      - "8080:8080"
+
+    env_file:
+      - .env
+
+    environment:
+      SPRING_PROFILES_ACTIVE: docker
+      JWT_SECRET: ${JWT_SECRET}
+
+    depends_on:
+      user:
+        condition: service_started
+      transaction-service:
+        condition: service_started
+      analytics-service:
+        condition: service_started
+
+
+# ============================================================
+# VOLUMES
+# ============================================================
 
 volumes:
   pgdata_user:

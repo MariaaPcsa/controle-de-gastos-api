@@ -34,11 +34,12 @@ mais senha
 
 | Método | Rota | Descrição |
 |--------|------|-----------|
-| GET | `/transactions` | Listar todas as transações |
-| GET | `/transactions/{id}` | Obter transação por ID |
-| POST | `/transactions` | Criar nova transação |
-| PUT | `/transactions/{id}` | Atualizar transação |
-| DELETE | `/transactions/{id}` | Remover transação |
+| GET | `/api/transactions` | Listar todas as transações |
+| GET | `/api/transactions/{id}` | Obter transação por ID |
+| POST | `/api/transactions` | Criar nova transação |
+| PUT | `/api/transactions/{id}` | Atualizar transação |
+| DELETE | `/api/transactions/{id}` | Remover transação |
+| POST | `/api/transactions/upload` | Importar transações via planilha |
 
 ## Próximos passos
 

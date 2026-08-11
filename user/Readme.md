@@ -67,18 +67,24 @@ mvn spring-boot:run
 
 O servidor iniciará no endereço:
 
-http://localhost:8080
+http://localhost:8081
 
 
 ⚠️ Use os parâmetros de banco de dados e JWT definidos no application.yml antes de subir o serviço.
 
 📍 Endpoints Principais
-Método	Rota	Descrição
-POST	/api/auth/register	Cadastrar novo usuário
-POST	/api/auth/login	Login e geração de token JWT
-GET	/api/users	Listar todos usuários
-GET	/api/users/{id}	Buscar usuário por ID
-DELETE	/api/users/{id}	Deletar usuário
+
+| Método | Rota | Descrição |
+|-------|------|-----------|
+| POST | `/api/auth/register` | Cadastrar novo usuário |
+| POST | `/api/auth/login` | Login e geração de token JWT |
+| GET | `/api/users` | Listar todos usuários |
+| GET | `/api/users/{id}` | Buscar usuário por ID |
+| POST | `/api/users` | Criar novo usuário |
+| PUT | `/api/users/{id}` | Atualizar usuário |
+| DELETE | `/api/users/{id}` | Deletar usuário |
+| PATCH | `/api/users/{id}/role` | Atualizar role do usuário |
+| PATCH | `/api/users/{id}/reactivate` | Reativar usuário |
 
 Para endpoints protegidos, envie o token JWT no header:
 Authorization: Bearer SEU_TOKEN_AQUI
@@ -136,7 +142,7 @@ Body (JSON):
 
 cURL:
 
-curl -X POST http://localhost:8080/api/auth/register \
+curl -X POST http://localhost:8081/api/auth/register \
 -H "Content-Type: application/json" \
 -d '{
 "name": "Maria Silva",

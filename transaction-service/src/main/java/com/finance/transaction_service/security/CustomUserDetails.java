@@ -25,13 +25,15 @@ public class CustomUserDetails implements UserDetails {
 
     @Override
     public Collection<? extends GrantedAuthority> getAuthorities() {
-        // 🔥 CORREÇÃO PRINCIPAL
-        return List.of(new SimpleGrantedAuthority("ROLE_" + role));
+
+        String finalRole = role.startsWith("ROLE_") ? role : "ROLE_" + role;
+
+        return List.of(new SimpleGrantedAuthority(finalRole));
     }
 
     @Override
     public String getPassword() {
-        return null;
+        return "";
     }
 
     @Override
@@ -43,4 +45,9 @@ public class CustomUserDetails implements UserDetails {
     @Override public boolean isAccountNonLocked() { return true; }
     @Override public boolean isCredentialsNonExpired() { return true; }
     @Override public boolean isEnabled() { return true; }
+
+    @Override
+    public String toString() {
+        return "UserDetails{id=" + id + ", username='" + username + "', role='" + role + "'}";
+    }
 }

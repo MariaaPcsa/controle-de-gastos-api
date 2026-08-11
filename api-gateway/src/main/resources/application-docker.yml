@@ -3,23 +3,78 @@ spring:
     activate:
       on-profile: docker
 
+  cloud:
+    gateway:
+
+      routes:
+
+        # ======================================================
+        # USER SERVICE
+        # ======================================================
+
+        - id: user-service
+          uri: http://user:8001
+          predicates:
+            - Path=/api/users/**,/api/auth/**,/api/excel/**
+
+        # ======================================================
+        # TRANSACTION SERVICE
+        # ======================================================
+
+        - id: transaction-service
+          uri: http://transaction-service:8002
+          predicates:
+            - Path=/api/transactions/**
+
+        # ======================================================
+        # ANALYTICS SERVICE
+        # ======================================================
+
+        - id: analytics-service
+          uri: http://analytics-service:8003
+          predicates:
+            - Path=/api/analysis/**
+
+      # ======================================================
+      # DEFAULT FILTERS
+      # ======================================================
+
+      default-filters:
+        - RemoveRequestHeader=Cookie
+        - RemoveResponseHeader=Set-Cookie
+        - DedupeResponseHeader=Access-Control-Allow-Origin Access-Control-Allow-Credentials
+
+      # ======================================================
+      # CORS
+      # ======================================================
+
+      globalcors:
+        add-to-simple-url-handler-mapping: true
+
+        cors-configurations:
+          '[/**]':
+            allowedOrigins:
+              - "*"
+
+            allowedMethods:
+              - GET
+              - POST
+              - PUT
+              - DELETE
+              - OPTIONS
+
+            allowedHeaders:
+              - "*"
+
 server:
   port: 8080
 
-services:
-  user:
-    url: http://user:8001
-  transaction:
-    url: http://transaction-service:8002
-  analytics:
-    url: http://analytics-service:8003
-
 jwt:
-  secret: ${JWT_SECRET:replace_with_secure_secret_please}
+  secret: ${JWT_SECRET:dev-secret-super-long-for-hs256-algo-1234567890}
 
 springdoc:
   api-docs:
     path: /v3/api-docs
+
   swagger-ui:
     path: /swagger-ui.html
-
