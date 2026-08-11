@@ -19,12 +19,13 @@ public class AdminInitializer implements CommandLineRunner {
         this.userRepository = userRepository;
         this.passwordEncoder = passwordEncoder;
     }
-//@RestController
+
+    //@RestController
     @Override
     public void run(String... args) {
+
         String adminEmail = "admin@finance.com";
 
-        // Verifica se já existe o admin
         userRepository.findByEmail(adminEmail).ifPresentOrElse(
                 admin -> System.out.println("ADMIN já existe: " + adminEmail),
                 () -> {
@@ -35,7 +36,9 @@ public class AdminInitializer implements CommandLineRunner {
                             passwordEncoder.encode("admin123"),
                             UserType.ADMIN
                     );
+
                     userRepository.save(admin);
+
                     System.out.println("ADMIN padrão criado: " + adminEmail);
                 }
         );

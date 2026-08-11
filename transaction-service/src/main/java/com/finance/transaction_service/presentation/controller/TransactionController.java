@@ -26,8 +26,6 @@ import java.util.List;
 import java.util.Optional;
 import java.util.UUID;
 
-
-
 @RestController
 @RequestMapping("/api/transactions")
 @Tag(name = "Transações", description = "Endpoints para gerenciamento de transações financeiras")
@@ -43,7 +41,8 @@ public class TransactionController {
 
     // main constructor used by Spring
     @Autowired
-    public TransactionController(TransactionApplicationService service, Optional<TransactionExcelImporter> excelImporterOpt) {
+    public TransactionController(TransactionApplicationService service,
+            Optional<TransactionExcelImporter> excelImporterOpt) {
         this.service = service;
         this.excelImporter = excelImporterOpt.orElse(null);
     }
@@ -69,8 +68,7 @@ public class TransactionController {
                 dto.getAmount(),
                 dto.getCurrency(),
                 dto.getCategory(),
-                dto.getType()
-        );
+                dto.getType());
 
         return ResponseEntity.status(HttpStatus.CREATED).body(toResponse(transaction));
     }
@@ -82,24 +80,14 @@ public class TransactionController {
     @GetMapping
     public ResponseEntity<PagedResponseDTO<TransactionResponseDTO>> list(
             @AuthenticationPrincipal CustomUserDetails user,
-            @Parameter(description = "Categoria para filtro (opcional)")
-            @RequestParam(required = false) String category,
-            @Parameter(description = "Tipo de transação - INCOME ou EXPENSE (opcional)")
-            @RequestParam(required = false) String type,
-            @Parameter(description = "Data inicial do período (formato dd-MM-yyyy: 01-01-2024)")
-            @RequestParam(required = false)
-            @DateTimeFormat(iso = DateTimeFormat.ISO.DATE_TIME) LocalDateTime startDate,
-            @Parameter(description = "Data final do período (formato dd-MM-yyyy: 31-12-2024)")
-            @RequestParam(required = false)
-            @DateTimeFormat(iso = DateTimeFormat.ISO.DATE_TIME) LocalDateTime endDate,
-            @Parameter(description = "Número da página (0-indexed, padrão: 0)")
-            @RequestParam(defaultValue = "0") Integer page,
-            @Parameter(description = "Tamanho da página (padrão: 10)")
-            @RequestParam(defaultValue = "10") Integer pageSize,
-            @Parameter(description = "Campo para ordenação (padrão: createdAt)")
-            @RequestParam(defaultValue = "createdAt") String sortBy,
-            @Parameter(description = "Direção de ordenação - ASC ou DESC (padrão: DESC)")
-            @RequestParam(defaultValue = "DESC") String sortDirection) {
+            @Parameter(description = "Categoria para filtro (opcional)") @RequestParam(required = false) String category,
+            @Parameter(description = "Tipo de transação - INCOME ou EXPENSE (opcional)") @RequestParam(required = false) String type,
+            @Parameter(description = "Data inicial do período (formato dd-MM-yyyy: 01-01-2024)") @RequestParam(required = false) @DateTimeFormat(iso = DateTimeFormat.ISO.DATE_TIME) LocalDateTime startDate,
+            @Parameter(description = "Data final do período (formato dd-MM-yyyy: 31-12-2024)") @RequestParam(required = false) @DateTimeFormat(iso = DateTimeFormat.ISO.DATE_TIME) LocalDateTime endDate,
+            @Parameter(description = "Número da página (0-indexed, padrão: 0)") @RequestParam(defaultValue = "0") Integer page,
+            @Parameter(description = "Tamanho da página (padrão: 10)") @RequestParam(defaultValue = "10") Integer pageSize,
+            @Parameter(description = "Campo para ordenação (padrão: createdAt)") @RequestParam(defaultValue = "createdAt") String sortBy,
+            @Parameter(description = "Direção de ordenação - ASC ou DESC (padrão: DESC)") @RequestParam(defaultValue = "DESC") String sortDirection) {
 
         // Converter String para TransactionType se fornecido
         TransactionType transactionType = null;
@@ -119,8 +107,7 @@ public class TransactionController {
                 page,
                 pageSize,
                 sortBy,
-                sortDirection
-        );
+                sortDirection);
 
         List<TransactionResponseDTO> result = service.list(user.getId(), filter)
                 .stream()
@@ -132,8 +119,7 @@ public class TransactionController {
                 result,
                 page,
                 pageSize,
-                totalElements
-        );
+                totalElements);
 
         return ResponseEntity.ok(response);
     }
@@ -146,11 +132,9 @@ public class TransactionController {
     @ApiResponse(responseCode = "403", description = "Sem permissão para deletar esta transação")
     @DeleteMapping("/{id}")
     public ResponseEntity<Void> delete(
-            @Parameter(description = "ID da transação a ser deletada")
-            @PathVariable UUID id,
+            @Parameter(description = "ID da transação a ser deletada") @PathVariable UUID id,
             @AuthenticationPrincipal CustomUserDetails user,
-            @Parameter(description = "Confirmação de deleção (padrão: true)")
-            @RequestParam(defaultValue = "true") Boolean confirmDelete) {
+            @Parameter(description = "Confirmação de deleção (padrão: true)") @RequestParam(defaultValue = "true") Boolean confirmDelete) {
 
         if (!confirmDelete) {
             return ResponseEntity.badRequest().build();
@@ -168,8 +152,7 @@ public class TransactionController {
     @ApiResponse(responseCode = "403", description = "Sem permissão para atualizar esta transação")
     @PutMapping("/{id}")
     public ResponseEntity<TransactionResponseDTO> update(
-            @Parameter(description = "ID da transação a ser atualizada")
-            @PathVariable UUID id,
+            @Parameter(description = "ID da transação a ser atualizada") @PathVariable UUID id,
             @Valid @RequestBody UpdateTransactionDTO dto,
             @AuthenticationPrincipal CustomUserDetails user) {
 
@@ -181,8 +164,7 @@ public class TransactionController {
                 dto.getCategory(),
                 dto.getType(),
                 dto.getCurrency(),
-                user.getId()
-        );
+                user.getId());
 
         return ResponseEntity.ok(toResponse(transaction));
     }
@@ -192,8 +174,9 @@ public class TransactionController {
     @Operation(summary = "Importar transações via planilha (XLSX)")
     @PostMapping(value = "/upload", consumes = MediaType.MULTIPART_FORM_DATA_VALUE)
     public ResponseEntity<ImportResultDTO> upload(@RequestPart("file") MultipartFile file,
-                                                  @AuthenticationPrincipal CustomUserDetails user) {
-        // TODO: validar permissão do usuário (só admin ou owner) - por enquanto qualquer usuário cadastrado pode importar
+            @AuthenticationPrincipal CustomUserDetails user) {
+        // TODO: validar permissão do usuário (só admin ou owner) - por enquanto
+        // qualquer usuário cadastrado pode importar
         ImportResultDTO result = excelImporter.importFile(file);
         return ResponseEntity.ok(result);
     }

@@ -19,9 +19,9 @@ Ainda em desenvolvimento, aqui estarão as regras de cálculo de estatísticas f
 
 | Método | Rota | Retorno |
 |--------|------|---------|
-| GET | `/analytics/summary` | resumo geral |
-| GET | `/analytics/month/:ano/:mes` | resumo por mês |
-| GET | `/analytics/category` | agrupado por categoria |
+| GET | `/api/analysis/summary/{userId}` | resumo geral por usuário |
+| GET | `/api/analysis/report/excel/{userId}` | relatório Excel |
+| GET | `/api/analysis/report/pdf/{userId}` | relatório PDF |
 
 ## 🛠 Próximos passos
 
