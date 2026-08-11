@@ -1,6 +1,18 @@
-FROM eclipse-temurin:21-jdk-alpine
+FROM maven:3.9.6-eclipse-temurin-21 AS build
+
 WORKDIR /app
-COPY target/*.jar app.jar
+
+COPY . .
+
+RUN mvn clean package -pl analytics-service -am -DskipTests
+
+FROM eclipse-temurin:21-jdk
+
+WORKDIR /app
+
+COPY --from=build /app/analytics-service/target/*.jar app.jar
+
 EXPOSE 8003
-ENTRYPOINT ["java","-jar","/app/app.jar"]
+
+ENTRYPOINT ["java","-jar","app.jar"]
 

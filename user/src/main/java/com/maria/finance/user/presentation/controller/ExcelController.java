@@ -1,13 +1,14 @@
 package com.maria.finance.user.presentation.controller;
 
-import com.maria.finance.user.domain.model.User;
-import com.maria.finance.user.infrastructure.excel.*;
-import com.maria.finance.user.infrastructure.security.UserDetailsAdapter;
+import com.maria.finance.user.infrastructure.excel.UserExcelImporter;
+import com.maria.finance.user.infrastructure.excel.UserImportErrorExporter;
+import com.maria.finance.user.infrastructure.excel.UserImportResult;
 import io.swagger.v3.oas.annotations.security.SecurityRequirement;
 import org.springframework.http.HttpHeaders;
 import org.springframework.http.MediaType;
 import org.springframework.http.ResponseEntity;
 import org.springframework.security.core.annotation.AuthenticationPrincipal;
+import org.springframework.security.access.prepost.PreAuthorize;
 import org.springframework.web.bind.annotation.*;
 import org.springframework.web.multipart.MultipartFile;
 
@@ -20,35 +21,20 @@ public class ExcelController {
     private final UserImportErrorExporter exporter;
 
     public ExcelController(UserExcelImporter importer,
-                           UserImportErrorExporter exporter) {
+            UserImportErrorExporter exporter) {
         this.importer = importer;
         this.exporter = exporter;
     }
 
-    private User getRequester(UserDetailsAdapter userDetails) {
-        if (userDetails == null) {
-            throw new RuntimeException("Usuário não autenticado");
-        }
-        return userDetails.getDomainUser();
-    }
-
     // 🚀 IMPORTAÇÃO
     @PostMapping("/upload")
-    public ResponseEntity<?> uploadExcel(
-            @RequestParam("file") MultipartFile file,
-            @AuthenticationPrincipal UserDetailsAdapter userDetails
-    ) {
+    @PreAuthorize("hasRole('ADMIN')")
+    public ResponseEntity<UserImportResult> uploadExcel(
+            @RequestParam("file") MultipartFile file) {
 
         if (file == null || file.isEmpty()) {
             return ResponseEntity.badRequest()
-                    .body("Arquivo não enviado ou vazio");
-        }
-
-        User requester = getRequester(userDetails);
-
-        if (!requester.isAdmin()) {
-            return ResponseEntity.status(403)
-                    .body("Apenas ADMIN pode importar usuários");
+                    .body(null);
         }
 
         UserImportResult result = importer.importUsers(file);
@@ -56,30 +42,21 @@ public class ExcelController {
         return ResponseEntity.ok(result);
     }
 
-    // 📥 DOWNLOAD DOS ERROS
-    @PostMapping("/errors/download")
-    public ResponseEntity<?> downloadErrors(
-            @RequestBody UserImportResult result,
-            @AuthenticationPrincipal UserDetailsAdapter userDetails
-    ) {
-
-        User requester = getRequester(userDetails);
-
-        if (!requester.isAdmin()) {
-            return ResponseEntity.status(403)
-                    .body("Apenas ADMIN pode baixar erros");
-        }
+    // 📥 DOWNLOAD ERROS (versão correta)
+    @PostMapping(value = "/errors/download", produces = MediaType.APPLICATION_OCTET_STREAM_VALUE)
+    @PreAuthorize("hasRole('ADMIN')")
+    public ResponseEntity<byte[]> downloadErrors(
+            @RequestBody UserImportResult result) {
 
         if (result == null || result.getErrors() == null || result.getErrors().isEmpty()) {
-            return ResponseEntity.badRequest()
-                    .body("Não há erros para exportar");
+            return ResponseEntity.badRequest().build();
         }
 
         byte[] file = exporter.exportErrors(result.getErrors());
 
         return ResponseEntity.ok()
-                .header(HttpHeaders.CONTENT_DISPOSITION, "attachment; filename=erros-importacao.xlsx")
-                .contentType(MediaType.APPLICATION_OCTET_STREAM)
+                .header(HttpHeaders.CONTENT_DISPOSITION,
+                        "attachment; filename=erros-importacao.xlsx")
                 .body(file);
     }
 }

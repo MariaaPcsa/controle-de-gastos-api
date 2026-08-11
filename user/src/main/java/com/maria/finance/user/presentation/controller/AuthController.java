@@ -23,8 +23,8 @@ public class AuthController {
     private final PasswordEncoder passwordEncoder;
 
     public AuthController(UserApplicationService service,
-                          JwtService jwt,
-                          PasswordEncoder passwordEncoder) {
+            JwtService jwt,
+            PasswordEncoder passwordEncoder) {
         this.service = service;
         this.jwt = jwt;
         this.passwordEncoder = passwordEncoder;
@@ -47,8 +47,7 @@ public class AuthController {
                 dto.name(),
                 dto.email(),
                 hashedPassword,
-                UserType.USER
-        );
+                UserType.USER);
 
         User created = service.create(user);
 

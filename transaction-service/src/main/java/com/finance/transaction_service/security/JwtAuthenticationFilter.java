@@ -1,46 +1,100 @@
 package com.finance.transaction_service.security;
 
+import io.jsonwebtoken.Claims;
 import jakarta.servlet.FilterChain;
 import jakarta.servlet.ServletException;
 import jakarta.servlet.http.HttpServletRequest;
 import jakarta.servlet.http.HttpServletResponse;
+
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
+
 import org.springframework.security.authentication.UsernamePasswordAuthenticationToken;
 import org.springframework.security.core.context.SecurityContextHolder;
+import org.springframework.stereotype.Component;
 import org.springframework.web.filter.OncePerRequestFilter;
 
 import java.io.IOException;
+import java.util.UUID;
 
+@Component
 public class JwtAuthenticationFilter extends OncePerRequestFilter {
+
+    private static final Logger log =
+            LoggerFactory.getLogger(JwtAuthenticationFilter.class);
 
     private final JwtTokenProvider tokenProvider;
 
-    public JwtAuthenticationFilter(JwtTokenProvider tokenProvider) {
+    public JwtAuthenticationFilter(
+            JwtTokenProvider tokenProvider) {
+
         this.tokenProvider = tokenProvider;
     }
 
     @Override
-    protected void doFilterInternal(HttpServletRequest request,
-                                    HttpServletResponse response,
-                                    FilterChain filterChain)
+    protected boolean shouldNotFilter(
+            HttpServletRequest request) {
+
+        String path = request.getRequestURI();
+
+        return path.startsWith("/api/auth")
+                || path.startsWith("/v3/api-docs")
+                || path.startsWith("/swagger-ui")
+                || path.startsWith("/h2-console");
+    }
+
+    @Override
+    protected void doFilterInternal(
+            HttpServletRequest request,
+            HttpServletResponse response,
+            FilterChain filterChain)
             throws ServletException, IOException {
 
-        String header = request.getHeader("Authorization");
+        String header =
+                request.getHeader("Authorization");
 
-        if (header != null && header.startsWith("Bearer ")) {
+        if (header == null || !header.startsWith("Bearer ")) {
 
-            String token = header.substring(7);
+            filterChain.doFilter(request, response);
+            return;
+        }
 
-            try {
-                if (tokenProvider.validateToken(token)) {
+        String token = header.substring(7).trim();
 
-                    String username = tokenProvider.getUsername(token);
-                    String role = tokenProvider.getRole(token);
-                    Long userId = tokenProvider.getId(token);
+        if (token.isBlank()) {
 
-                    if (username != null && role != null && userId != null) {
+            filterChain.doFilter(request, response);
+            return;
+        }
+
+        try {
+
+            if (tokenProvider.validateToken(token)) {
+
+                Claims claims =
+                        tokenProvider.getClaimsSafe(token);
+
+                if (claims != null) {
+
+                    String username =
+                            tokenProvider.getUsername(claims);
+
+                    String role =
+                            tokenProvider.getRole(claims);
+
+                    UUID userId =
+                            tokenProvider.getUserId(claims);
+
+                    if (username != null
+                            && role != null
+                            && userId != null) {
 
                         CustomUserDetails userDetails =
-                                new CustomUserDetails(userId, username, role);
+                                new CustomUserDetails(
+                                        userId,
+                                        username,
+                                        role
+                                );
 
                         UsernamePasswordAuthenticationToken authentication =
                                 new UsernamePasswordAuthenticationToken(
@@ -49,17 +103,38 @@ public class JwtAuthenticationFilter extends OncePerRequestFilter {
                                         userDetails.getAuthorities()
                                 );
 
-                        SecurityContextHolder.getContext().setAuthentication(authentication);
+                        SecurityContextHolder
+                                .getContext()
+                                .setAuthentication(authentication);
 
-                        // 🔍 DEBUG (pode remover depois)
-                        System.out.println("AUTH OK: " + userDetails.getAuthorities());
+                        log.debug(
+                                "JWT autenticado: username={}, userId={}, role={}",
+                                username,
+                                userId,
+                                role
+                        );
                     }
                 }
-            } catch (Exception e) {
-                System.err.println("Erro ao validar token: " + e.getMessage());
+
+            } else {
+
+                log.warn("Token JWT inválido");
             }
+
+        } catch (Exception e) {
+
+            log.warn(
+                    "Não foi possível processar o JWT: {}",
+                    e.getMessage()
+            );
         }
 
+        /*
+         * Importante:
+         *
+         * O filtro não trata erro de validação do DTO.
+         * O Spring Security continua o processamento.
+         */
         filterChain.doFilter(request, response);
     }
 }

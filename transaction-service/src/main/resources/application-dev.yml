@@ -1,7 +1,7 @@
 spring:
   config:
     activate:
-      on-profile: local
+      on-profile: dev
 
   datasource:
     url: jdbc:postgresql://localhost:5434/tx_db
@@ -15,7 +15,7 @@ spring:
     database-platform: org.hibernate.dialect.PostgreSQLDialect
 
   kafka:
-    bootstrap-servers: localhost:9092
+    bootstrap-servers: localhost:29092
 
 jwt:
-  secret: ${JWT_SECRET:dev-secret-123456789012345678901234567890}
+  secret: dev-secret-super-long-for-hs256-algo-1234567890

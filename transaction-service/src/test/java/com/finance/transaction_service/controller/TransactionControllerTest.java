@@ -8,6 +8,7 @@ import com.finance.transaction_service.presentation.dto.FilterTransactionDTO;
 import com.finance.transaction_service.presentation.dto.PagedResponseDTO;
 import com.finance.transaction_service.presentation.dto.TransactionResponseDTO;
 import com.finance.transaction_service.security.CustomUserDetails;
+
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 import org.springframework.http.ResponseEntity;
@@ -18,31 +19,47 @@ import java.util.List;
 import java.util.UUID;
 
 import static org.junit.jupiter.api.Assertions.*;
-import static org.mockito.Mockito.*;
 import static org.mockito.ArgumentMatchers.any;
 import static org.mockito.ArgumentMatchers.eq;
+import static org.mockito.Mockito.*;
 
 class TransactionControllerTest {
 
     private TransactionApplicationService service;
     private TransactionController controller;
 
+    private UUID userId;
+
     @BeforeEach
     void setup() {
+
         service = mock(TransactionApplicationService.class);
+
         controller = new TransactionController(service);
+
+        userId = UUID.randomUUID();
     }
 
     @Test
     void should_list_transactions() {
 
-        // 🔐 Mock do usuário autenticado
-        CustomUserDetails userDetails = mock(CustomUserDetails.class);
-        when(userDetails.getId()).thenReturn(1L);
+        // =====================================================
+        // USUÁRIO AUTENTICADO
+        // =====================================================
+
+        CustomUserDetails userDetails =
+                mock(CustomUserDetails.class);
+
+        when(userDetails.getId())
+                .thenReturn(userId);
+
+        // =====================================================
+        // TRANSAÇÃO 1
+        // =====================================================
 
         Transaction t1 = Transaction.restore(
                 UUID.randomUUID(),
-                1L,
+                userId,
                 "Salário",
                 BigDecimal.valueOf(1000),
                 BigDecimal.valueOf(1000),
@@ -52,9 +69,13 @@ class TransactionControllerTest {
                 LocalDateTime.now().minusDays(1)
         );
 
+        // =====================================================
+        // TRANSAÇÃO 2
+        // =====================================================
+
         Transaction t2 = Transaction.restore(
                 UUID.randomUUID(),
-                1L,
+                userId,
                 "Aluguel",
                 BigDecimal.valueOf(500),
                 BigDecimal.valueOf(500),
@@ -64,24 +85,87 @@ class TransactionControllerTest {
                 LocalDateTime.now()
         );
 
-        // Mock do novo método com FilterTransactionDTO
-        when(service.list(eq(1L), any(FilterTransactionDTO.class))).thenReturn(List.of(t1, t2));
+        // =====================================================
+        // MOCK DO SERVICE
+        // =====================================================
+
+        when(
+                service.list(
+                        eq(userId),
+                        any(FilterTransactionDTO.class)
+                )
+        ).thenReturn(List.of(t1, t2));
+
+        // =====================================================
+        // EXECUTA CONTROLLER
+        // =====================================================
 
         ResponseEntity<PagedResponseDTO<TransactionResponseDTO>> response =
-                controller.list(userDetails, null, null, null, null, 0, 10, "createdAt", "DESC");
+                controller.list(
+                        userDetails,
+                        null,
+                        null,
+                        null,
+                        null,
+                        0,
+                        10,
+                        "createdAt",
+                        "DESC"
+                );
+
+        // =====================================================
+        // VALIDA RESPONSE
+        // =====================================================
 
         assertNotNull(response);
-        assertEquals(200, response.getStatusCodeValue());
 
-        PagedResponseDTO<TransactionResponseDTO> result = response.getBody();
+        assertEquals(
+                200,
+                response.getStatusCodeValue()
+        );
+
+        PagedResponseDTO<TransactionResponseDTO> result =
+                response.getBody();
+
         assertNotNull(result);
-        assertEquals(2, result.getContent().size());
 
-        assertTrue(result.getContent().stream()
-                .anyMatch(t -> "Salário".equals(t.getDescription())));
-        assertTrue(result.getContent().stream()
-                .anyMatch(t -> "Aluguel".equals(t.getDescription())));
+        assertEquals(
+                2,
+                result.getContent().size()
+        );
 
-        verify(service, times(1)).list(eq(1L), any(FilterTransactionDTO.class));
+        // =====================================================
+        // VALIDA TRANSAÇÕES
+        // =====================================================
+
+        assertTrue(
+                result.getContent()
+                        .stream()
+                        .anyMatch(
+                                t -> "Salário"
+                                        .equals(t.getDescription())
+                        )
+        );
+
+        assertTrue(
+                result.getContent()
+                        .stream()
+                        .anyMatch(
+                                t -> "Aluguel"
+                                        .equals(t.getDescription())
+                        )
+        );
+
+        // =====================================================
+        // VERIFICA CHAMADA DO SERVICE
+        // =====================================================
+
+        verify(
+                service,
+                times(1)
+        ).list(
+                eq(userId),
+                any(FilterTransactionDTO.class)
+        );
     }
 }

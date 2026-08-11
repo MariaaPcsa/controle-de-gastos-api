@@ -7,7 +7,7 @@ import java.util.UUID;
 public class Transaction {
 
     private UUID id;
-    private Long userId;
+    private UUID userId;
     private String description;
     private BigDecimal amount;
     private BigDecimal originalAmount;
@@ -16,15 +16,20 @@ public class Transaction {
     private TransactionType type;
     private LocalDateTime createdAt;
 
-    private Transaction(UUID id,
-                        Long userId,
-                        String description,
-                        BigDecimal amount,
-                        BigDecimal originalAmount,
-                        String currency,
-                        String category,
-                        TransactionType type,
-                        LocalDateTime createdAt) {
+    // =========================================================
+    // CONSTRUCTOR
+    // =========================================================
+
+    private Transaction(
+            UUID id,
+            UUID userId,
+            String description,
+            BigDecimal amount,
+            BigDecimal originalAmount,
+            String currency,
+            String category,
+            TransactionType type,
+            LocalDateTime createdAt) {
 
         this.id = id;
         this.userId = userId;
@@ -37,14 +42,22 @@ public class Transaction {
         this.createdAt = createdAt;
     }
 
-    // CREATE (novo registro)
-    public static Transaction create(Long userId,
-                                     String description,
-                                     BigDecimal amount,
-                                     BigDecimal originalAmount,
-                                     String currency,
-                                     String category,
-                                     TransactionType type) {
+    // =========================================================
+    // CREATE
+    // =========================================================
+
+    public static Transaction create(
+            UUID userId,
+            String description,
+            BigDecimal amount,
+            BigDecimal originalAmount,
+            String currency,
+            String category,
+            TransactionType type) {
+
+        if (userId == null) {
+            throw new IllegalArgumentException("User ID é obrigatório");
+        }
 
         return new Transaction(
                 UUID.randomUUID(),
@@ -59,16 +72,20 @@ public class Transaction {
         );
     }
 
-    // RESTORE (vindo do banco)
-    public static Transaction restore(UUID id,
-                                      Long userId,
-                                      String description,
-                                      BigDecimal amount,
-                                      BigDecimal originalAmount,
-                                      String currency,
-                                      String category,
-                                      TransactionType type,
-                                      LocalDateTime createdAt) {
+    // =========================================================
+    // RESTORE
+    // =========================================================
+
+    public static Transaction restore(
+            UUID id,
+            UUID userId,
+            String description,
+            BigDecimal amount,
+            BigDecimal originalAmount,
+            String currency,
+            String category,
+            TransactionType type,
+            LocalDateTime createdAt) {
 
         return new Transaction(
                 id,
@@ -83,12 +100,16 @@ public class Transaction {
         );
     }
 
-    // UPDATE (retornando a própria entidade)
-    public Transaction update(String description,
-                              BigDecimal amount,
-                              BigDecimal originalAmount,
-                              String category,
-                              TransactionType type) {
+    // =========================================================
+    // UPDATE
+    // =========================================================
+
+    public Transaction update(
+            String description,
+            BigDecimal amount,
+            BigDecimal originalAmount,
+            String category,
+            TransactionType type) {
 
         this.description = description;
         this.amount = amount;
@@ -99,19 +120,54 @@ public class Transaction {
         return this;
     }
 
+    // =========================================================
     // GETTERS
+    // =========================================================
 
-    public UUID getId() { return id; }
-    public Long getUserId() { return userId; }
-    public String getDescription() { return description; }
-    public BigDecimal getAmount() { return amount; }
-    public BigDecimal getOriginalAmount() { return originalAmount; }
-    public String getCurrency() { return currency; }
-    public String getCategory() { return category; }
-    public TransactionType getType() { return type; }
-    public LocalDateTime getCreatedAt() { return createdAt; }
+    public UUID getId() {
+        return id;
+    }
+
+    public UUID getUserId() {
+        return userId;
+    }
+
+    public String getDescription() {
+        return description;
+    }
+
+    public BigDecimal getAmount() {
+        return amount;
+    }
+
+    public BigDecimal getOriginalAmount() {
+        return originalAmount;
+    }
+
+    public String getCurrency() {
+        return currency;
+    }
+
+    public String getCategory() {
+        return category;
+    }
+
+    public TransactionType getType() {
+        return type;
+    }
+
+    public LocalDateTime getCreatedAt() {
+        return createdAt;
+    }
+
+    // =========================================================
+    // SIGNED AMOUNT
+    // =========================================================
 
     public BigDecimal getSignedAmount() {
-        return type.isExpense() ? amount.negate() : amount;
+
+        return type.isExpense()
+                ? amount.negate()
+                : amount;
     }
 }

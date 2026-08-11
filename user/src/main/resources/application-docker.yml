@@ -1,53 +1,59 @@
-spring:
-  config:
-    activate:
-      on-profile: docker
 
-  datasource:
-    # 🔥 NUNCA use localhost dentro do Docker
-    url: ${SPRING_DATASOURCE_URL:jdbc:postgresql://postgres-user:5432/user_db}
-    username: ${SPRING_DATASOURCE_USERNAME:postgres}
-    password: ${SPRING_DATASOURCE_PASSWORD:maria}
-    driver-class-name: org.postgresql.Driver
+  spring:
+    config:
+      activate:
+        on-profile: docker
 
-    hikari:
-      maximum-pool-size: 10
-      minimum-idle: 5
-      idle-timeout: 30000
-      max-lifetime: 2000000
-      connection-timeout: 30000
+    datasource:
+      url: ${SPRING_DATASOURCE_URL:jdbc:postgresql://postgres-user:5432/user_db}
+      username: ${SPRING_DATASOURCE_USERNAME:postgres}
+      password: ${SPRING_DATASOURCE_PASSWORD:maria}
+      driver-class-name: org.postgresql.Driver
 
-  jpa:
-    hibernate:
-      ddl-auto: ${DDL_AUTO:update}
-    show-sql: ${SHOW_SQL:true}
-    properties:
+      hikari:
+        maximum-pool-size: 10
+        minimum-idle: 5
+        idle-timeout: 30000
+        max-lifetime: 2000000
+        connection-timeout: 30000
+        initialization-fail-timeout: 60000
+
+    jpa:
       hibernate:
-        format_sql: true
-    database-platform: org.hibernate.dialect.PostgreSQLDialect
+        ddl-auto: update
 
-  kafka:
-    bootstrap-servers: ${KAFKA_BOOTSTRAP_SERVERS:kafka:9092}
-    consumer:
-      group-id: user-service-group
-      auto-offset-reset: earliest
+      show-sql: false
 
-jwt:
-  secret: ${JWT_SECRET:dev-secret-123456789012345678901234567890}
-  expiration: ${JWT_EXPIRATION:3600000}
+      database-platform: org.hibernate.dialect.PostgreSQLDialect
 
-server:
-  port: 8001
+      properties:
+        hibernate:
+          format_sql: true
 
-springdoc:
-  api-docs:
-    path: /v3/api-docs
-  swagger-ui:
-    path: /swagger-ui.html
+    kafka:
+      bootstrap-servers: ${KAFKA_BOOTSTRAP_SERVERS:kafka:9092}
 
-logging:
-  level:
-    root: INFO
-    org.springframework: INFO
-    org.apache.kafka: WARN
-    org.hibernate.SQL: DEBUG
+      consumer:
+        group-id: user-service-group
+        auto-offset-reset: earliest
+
+    jackson:
+      time-zone: America/Sao_Paulo
+
+
+  server:
+    port: 8001
+
+
+  jwt:
+    secret: ${JWT_SECRET:dev-secret-super-long-for-hs256-algo-1234567890}
+
+    expiration: ${JWT_EXPIRATION:3600000}
+
+
+  logging:
+    level:
+      root: INFO
+      org.springframework: INFO
+      org.apache.kafka: WARN
+      org.hibernate.SQL: DEBUG

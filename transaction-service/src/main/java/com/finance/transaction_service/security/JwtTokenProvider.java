@@ -1,79 +1,161 @@
 package com.finance.transaction_service.security;
 
 import io.jsonwebtoken.Claims;
+import io.jsonwebtoken.ExpiredJwtException;
+import io.jsonwebtoken.MalformedJwtException;
+import io.jsonwebtoken.UnsupportedJwtException;
 import io.jsonwebtoken.Jwts;
 import io.jsonwebtoken.security.Keys;
+
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
+
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.stereotype.Component;
 
 import java.nio.charset.StandardCharsets;
 import java.security.Key;
+import java.util.UUID;
 
 @Component
 public class JwtTokenProvider {
 
+    private static final Logger log =
+            LoggerFactory.getLogger(JwtTokenProvider.class);
+
     private final Key key;
 
-    public JwtTokenProvider(@Value("${jwt.secret}") String secret) {
-        this.key = Keys.hmacShaKeyFor(secret.getBytes(StandardCharsets.UTF_8));
+    public JwtTokenProvider(
+            @Value("${jwt.secret}") String secret) {
+
+        this.key = Keys.hmacShaKeyFor(
+                secret.getBytes(StandardCharsets.UTF_8)
+        );
     }
 
     public boolean validateToken(String token) {
-        try {
-            Jwts.parserBuilder()
-                    .setSigningKey(key)
-                    .build()
-                    .parseClaimsJws(token);
-            return true;
-        } catch (Exception e) {
-            System.out.println("Token inválido: " + e.getMessage());
+
+        if (token == null || token.isBlank()) {
             return false;
         }
+
+        try {
+
+            parseClaims(token);
+
+            return true;
+
+        } catch (ExpiredJwtException e) {
+
+            log.warn("Token expirado");
+
+        } catch (UnsupportedJwtException e) {
+
+            log.warn("Token não suportado");
+
+        } catch (MalformedJwtException e) {
+
+            log.warn("Token malformado");
+
+        } catch (SecurityException e) {
+
+            log.warn("Assinatura inválida");
+
+        } catch (Exception e) {
+
+            log.error(
+                    "Erro inesperado ao validar token",
+                    e
+            );
+        }
+
+        return false;
     }
 
-    public String getUsername(String token) {
+    public Claims getClaimsSafe(String token) {
+
+        if (token == null || token.isBlank()) {
+            return null;
+        }
+
         try {
-            return getClaims(token).getSubject();
+
+            return parseClaims(token);
+
         } catch (Exception e) {
-            System.err.println("Erro ao extrair username do token: " + e.getMessage());
+
+            log.error(
+                    "Erro ao extrair claims",
+                    e
+            );
+
             return null;
         }
     }
 
-    public String getRole(String token) {
-        try {
-            String role = getClaims(token).get("role", String.class);
-            if (role == null || role.isEmpty()) {
-                System.err.println("Role não encontrada no token. Usando padrão: USER");
-                return "USER";
-            }
-            return role;
-        } catch (Exception e) {
-            System.err.println("Erro ao extrair role do token: " + e.getMessage());
-            return "USER"; // Role padrão
-        }
+    public String getUsername(Claims claims) {
+
+        return claims != null
+                ? claims.getSubject()
+                : null;
     }
 
-    public Long getId(String token) {
+    public String getRole(Claims claims) {
+
+        if (claims == null) {
+            return null;
+        }
+
+        String role =
+                claims.get("role", String.class);
+
+        if (role == null || role.isBlank()) {
+
+            throw new RuntimeException(
+                    "Role ausente no token"
+            );
+        }
+
+        return role;
+    }
+
+    public UUID getUserId(Claims claims) {
+
+        if (claims == null) {
+            return null;
+        }
+
+        String userId =
+                claims.get("userId", String.class);
+
+        if (userId == null || userId.isBlank()) {
+
+            log.warn("userId ausente no token");
+
+            return null;
+        }
+
         try {
-            Integer id = getClaims(token).get("id", Integer.class);
-            return id != null ? id.longValue() : null;
-        } catch (Exception e) {
-            System.err.println("Erro ao extrair id do token: " + e.getMessage());
+
+            return UUID.fromString(userId);
+
+        } catch (IllegalArgumentException e) {
+
+            log.warn(
+                    "userId inválido no token: {}",
+                    userId
+            );
+
             return null;
         }
     }
 
-    private Claims getClaims(String token) {
-        try {
-            return Jwts.parserBuilder()
-                    .setSigningKey(key)
-                    .build()
-                    .parseClaimsJws(token)
-                    .getBody();
-        } catch (Exception e) {
-            System.err.println("Erro ao fazer parse do token: " + e.getMessage());
-            throw e;
-        }
+    private Claims parseClaims(String token) {
+
+        return Jwts.parserBuilder()
+                .setSigningKey(key)
+                .build()
+                .parseClaimsJws(token)
+                .getBody();
     }
 }
