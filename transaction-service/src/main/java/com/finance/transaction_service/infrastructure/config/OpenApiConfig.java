@@ -15,7 +15,7 @@ public class OpenApiConfig {
         return new OpenAPI()
                 .info(new Info()
                         .title("Controle de Gastos API - Módulo Transaction Service")
-                        .description("API responsável pelo gerenciamento de usuários, autenticação e permissões.")
+                        .description("API responsável pelo gerenciamento de transações financeiras.")
                         .version("v1.0.0")
                 )
                 .components(new Components()

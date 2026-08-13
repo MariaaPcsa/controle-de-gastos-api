@@ -10,6 +10,8 @@ import com.finance.analytics_service.infrastructure.ExcelReportGenerator;
 import com.finance.analytics_service.infrastructure.PdfReportGenerator;
 import org.springframework.stereotype.Service;
 
+import java.util.UUID;
+
 @Service
 public class AnalysisApplicationService implements ProcessTransactionUseCase, GenerateReportUseCase {
 
@@ -33,17 +35,17 @@ public class AnalysisApplicationService implements ProcessTransactionUseCase, Ge
         System.out.println("Despesa processada: " + expense.getDescription());
     }
 
-    public ExpenseSummary getSummary(Long userId) {
+    public ExpenseSummary getSummary(UUID userId) {
         return expenseRepository.getSummaryByUser(userId);
     }
 
     @Override
-    public byte[] generateExcel(Long userId) {
+    public byte[] generateExcel(UUID userId) {
         return excelReportGenerator.generate(userId);
     }
 
     @Override
-    public byte[] generatePdf(Long userId) {
+    public byte[] generatePdf(UUID userId) {
         return pdfReportGenerator.generate(userId);
     }
 }

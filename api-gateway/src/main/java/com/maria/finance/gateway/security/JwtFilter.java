@@ -38,7 +38,10 @@ public class JwtFilter implements GlobalFilter, Ordered {
 
         if (path.startsWith("/api/auth")
                 || path.startsWith("/swagger-ui")
-                || path.startsWith("/v3/api-docs")) {
+                || path.startsWith("/v3/api-docs")
+                || path.startsWith("/user/v3/api-docs")
+                || path.startsWith("/transaction/v3/api-docs")
+                || path.startsWith("/analytics/v3/api-docs")) {
 
             return chain.filter(exchange);
         }

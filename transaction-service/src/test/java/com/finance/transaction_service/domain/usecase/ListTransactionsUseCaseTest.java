@@ -8,7 +8,6 @@ import org.junit.jupiter.api.Test;
 
 import java.math.BigDecimal;
 import java.time.LocalDateTime;
-import java.util.ArrayList;
 import java.util.List;
 import java.util.UUID;
 
@@ -68,14 +67,11 @@ class ListTransactionsUseCaseTest {
                 );
 
         // =====================================================
-        // LISTA MUTÁVEL
+        // LISTA IMUTÁVEL
         // =====================================================
 
         List<Transaction> transactions =
-                new ArrayList<>();
-
-        transactions.add(t1);
-        transactions.add(t2);
+                List.of(t1, t2);
 
         // =====================================================
         // MOCK

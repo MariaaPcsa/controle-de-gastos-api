@@ -9,6 +9,8 @@ import org.springframework.http.MediaType;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
 
+import java.util.UUID;
+
 @RestController
 @RequestMapping("/api/analysis")
 @Tag(name = "Analysis", description = "Relatórios e análise de despesas")
@@ -22,13 +24,13 @@ public class AnalysisController {
 
     @Operation(summary = "Busca resumo de despesas por usuário")
     @GetMapping("/summary/{userId}")
-    public ExpenseSummary summary(@PathVariable Long userId) {
+    public ExpenseSummary summary(@PathVariable UUID userId) {
         return service.getSummary(userId);
     }
 
     @Operation(summary = "Gera relatório Excel de despesas")
     @GetMapping("/report/excel/{userId}")
-    public ResponseEntity<byte[]> excel(@PathVariable Long userId) {
+    public ResponseEntity<byte[]> excel(@PathVariable UUID userId) {
         byte[] file = service.generateExcel(userId);
 
         return ResponseEntity.ok()
@@ -39,7 +41,7 @@ public class AnalysisController {
 
     @Operation(summary = "Gera relatório PDF de despesas")
     @GetMapping("/report/pdf/{userId}")
-    public ResponseEntity<byte[]> pdf(@PathVariable Long userId) {
+    public ResponseEntity<byte[]> pdf(@PathVariable UUID userId) {
         byte[] file = service.generatePdf(userId);
 
         return ResponseEntity.ok()

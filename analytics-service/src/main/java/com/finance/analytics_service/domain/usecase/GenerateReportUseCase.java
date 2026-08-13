@@ -1,8 +1,8 @@
 package com.finance.analytics_service.domain.usecase;
 
-
+import java.util.UUID;
 
 public interface GenerateReportUseCase {
-    byte[] generateExcel(Long userId);
-    byte[] generatePdf(Long userId);
+    byte[] generateExcel(UUID userId);
+    byte[] generatePdf(UUID userId);
 }

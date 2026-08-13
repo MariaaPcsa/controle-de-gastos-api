@@ -1,298 +1,193 @@
-📌 User Service — Controle de Gastos API
+# User Service
 
-Este README documenta especificamente o serviço de usuários (user) da API de controle de gastos desenvolvida em Java com Spring Boot. Essa parte do projeto é responsável pelo cadastro, autenticação e gerenciamento de usuários da aplicação.
+Serviço responsável pelo cadastro, autenticação e gerenciamento de usuários da plataforma de controle de gastos.
 
+## Status atual
 
-Cada serviço possui seu próprio banco PostgreSQL
+O módulo `user` está implementado e expõe endpoints de autenticação, CRUD de usuários, alteração de role, reativação e importação de usuários via Excel.
 
+## Responsabilidades do serviço
 
-acessar o banco via terminal (mais rápido)
-docker exec -it controle-de-gastos-api-postgres-user-1 psql -U postgres -d user_db
-1. Ver tabelas
-   \dt
-2. 👀 2. Ver estrutura da tabela
-   \d users
-3. 📊 3. Ver dados (admin seed)
-   SELECT * FROM users;
-4. ✍️ 4. Inserir um usuário manual (teste)
-   INSERT INTO users (name, email, password, type)
-   VALUES ('Maria', 'maria@email.com', '123456', 'USER');
+- registrar usuários
+- autenticar usuários com JWT
+- listar usuários
+- buscar usuário por ID
+- criar usuários por rota autenticada
+- atualizar usuários
+- realizar exclusão lógica
+- reativar usuários
+- importar usuários via planilha Excel
+- gerar planilha de erros da importação
 
+## Stack utilizada
 
-O módulo user faz parte da arquitetura da Controle de Gastos API, uma REST API para gestão financeira pessoal. O serviço de usuários inclui funcionalidades como:
+- Java 21
+- Spring Boot 3.2.5
+- Spring Web
+- Spring Security
+- JWT
+- Spring Data JPA
+- PostgreSQL
+- Spring Validation
+- Apache POI
+- Springdoc OpenAPI
+- Spring Boot Actuator
+- Kafka (producer presente no projeto)
 
-✔️ Registro de novos usuários
-✔️ Login com geração e validação de tokens JWT
-✔️ Consulta, atualização e exclusão de usuários
-✔️ Integração com segurança Spring Security
+## Porta e perfis
 
-Esse módulo é fundamental para proteger rotas da API e garantir que cada usuário só acesse seus próprios dados de maneira segura.
+- Porta HTTP: `8001`
+- Nome da aplicação: `user-service`
+- Perfil padrão: `dev`
+- Perfil para Docker: `docker`
 
-🧱 Estrutura da Pasta
-user/
-├── src/
-│   ├── main/java/...
-│   │   ├── controller/        # Endpoints REST para usuários
-│   │   ├── service/           # Lógica de negócio de usuário
-│   │   ├── repository/        # Repositório de dados de usuário
-│   │   ├── model/             # Entidades (User, Role, etc.)
-│   │   └── security/          # Configurações de JWT e segurança
-├── pom.xml                    # Dependências e build Maven
-└── application.yml            # Configurações específicas do módulo
+## Banco de dados
 
-📋 Funcionalidades Principais
-🔐 Autenticação e Autorização
+Banco próprio do serviço:
 
-Registro de usuário: cria novo usuário com dados básicos (nome, email, senha).
+- `user_db`
 
-Login: gera token JWT para acesso às rotas protegidas.
+Configuração padrão no perfil `dev`:
 
-Proteção de rotas: uso de Spring Security para garantir que apenas usuários autenticados acessem recursos privados.
+- host: `localhost`
+- porta: `5433`
+- driver: `org.postgresql.Driver`
 
-🛠️ Como Rodar o Serviço Localmente
+## Como executar localmente
 
-Antes de executar, certifique-se de ter configurado:
+Na raiz do projeto, suba a infraestrutura necessária:
 
-✔️ Java 21
-✔️ Maven
-✔️ Base de dados configurada no arquivo application.yml
+```powershell
+Copy-Item ".env.example" ".env" -Force
+docker compose up -d zookeeper kafka postgres-user
+```
 
-📌 Executando sem Docker
+Depois inicie o serviço:
 
-No diretório user, rode:
-
-mvn clean install
+```powershell
+Set-Location "C:\Users\maria\Desktop\desafio beca\controle-de-gastos-api\user"
 mvn spring-boot:run
+```
 
+## Como executar com Docker Compose
 
-O servidor iniciará no endereço:
+Na raiz do projeto:
 
-http://localhost:8081
+```powershell
+Copy-Item ".env.example" ".env" -Force
+docker compose up -d --build
+```
 
+## Swagger / OpenAPI
 
-⚠️ Use os parâmetros de banco de dados e JWT definidos no application.yml antes de subir o serviço.
+Documentação individual do serviço:
 
-📍 Endpoints Principais
+- `http://localhost:8001/swagger-ui.html`
 
-| Método | Rota | Descrição |
-|-------|------|-----------|
-| POST | `/api/auth/register` | Cadastrar novo usuário |
-| POST | `/api/auth/login` | Login e geração de token JWT |
-| GET | `/api/users` | Listar todos usuários |
-| GET | `/api/users/{id}` | Buscar usuário por ID |
-| POST | `/api/users` | Criar novo usuário |
-| PUT | `/api/users/{id}` | Atualizar usuário |
-| DELETE | `/api/users/{id}` | Deletar usuário |
-| PATCH | `/api/users/{id}/role` | Atualizar role do usuário |
-| PATCH | `/api/users/{id}/reactivate` | Reativar usuário |
+Documentação centralizada pelo gateway:
 
-Para endpoints protegidos, envie o token JWT no header:
-Authorization: Bearer SEU_TOKEN_AQUI
+- `http://localhost:8080/swagger-ui.html`
 
-🧪 Testes
+## Endpoints implementados
 
-Para rodar os testes automáticos do módulo:
+### Autenticação
 
-mvn test
+| Método | Rota | Descrição | Status esperados |
+|--------|------|-----------|------------------|
+| POST | `/api/auth/register` | Registrar novo usuário | `200 OK`, `400 Bad Request` |
+| POST | `/api/auth/login` | Autenticar e gerar JWT | `200 OK`, `401 Unauthorized`, `403 Forbidden` |
 
-📌 Boas Práticas Usadas
+### Usuários
 
-✔️ Arquitetura em camadas (Controller → Service → Repository)
-✔️ Validações de entrada e tratamento de exceções
-✔️ Segurança com JWT e Spring Security
-✔️ Separação de responsabilidades
-✔️ Documentação de endpoints via Swagger (na raíz da API)
+| Método | Rota | Descrição | Status esperados |
+|--------|------|-----------|------------------|
+| GET | `/api/users` | Listar usuários | `200 OK` |
+| GET | `/api/users/{id}` | Buscar usuário por ID | `200 OK` |
+| POST | `/api/users` | Criar usuário | `200 OK` |
+| PUT | `/api/users/{id}` | Atualizar usuário | `200 OK` |
+| DELETE | `/api/users/{id}` | Excluir usuário | `204 No Content` |
+| PATCH | `/api/users/{id}/role` | Alterar role do usuário | `200 OK` |
+| PATCH | `/api/users/{id}/reactivate` | Reativar usuário | `200 OK` |
 
+### Excel
 
-📖 Documentação da API (Swagger)
+| Método | Rota | Descrição | Status esperados |
+|--------|------|-----------|------------------|
+| POST | `/api/excel/upload` | Importar usuários via Excel | `200 OK`, `400 Bad Request` |
+| POST | `/api/excel/errors/download` | Baixar planilha de erros da importação | `200 OK`, `400 Bad Request` |
 
-Após subir o serviço user, acesse a documentação interativa:
+## Exemplo de cadastro
 
-http://localhost:8080/swagger-ui.html
-
-
-ou (dependendo da config do Spring Boot 3):
-
-http://localhost:8080/swagger-ui/index.html
-http://localhost:8081/swagger-ui/index.html
-
-
-Lá você pode:
-
-Testar endpoints
-
-Ver schemas de request/response
-
-Autenticar via JWT no botão Authorize
-
-🔑 Exemplos de Requisições (Insomnia / Postman / cURL)
-✅ Cadastro de Usuário
-
-POST /api/auth/register
-
-Body (JSON):
-
+```json
 {
-"name": "Maria Silva",
-"email": "maria@email.com",
-"password": "123456",
-"type": "USER"
+  "name": "Maria Silva",
+  "email": "maria@email.com",
+  "password": "123456",
+  "type": "USER"
 }
+```
 
+## Exemplo de login
 
-cURL:
-
-curl -X POST http://localhost:8081/api/auth/register \
--H "Content-Type: application/json" \
--d '{
-"name": "Maria Silva",
-"email": "maria@email.com",
-"password": "123456",
-"type": "USER"
-}'
-
-🔐 Login
-
-POST /api/auth/login
-
-Body (JSON):
-
+```json
 {
-"email": "maria@email.com",
-"password": "123456"
+  "email": "maria@email.com",
+  "password": "123456"
 }
+```
 
+## Observação importante sobre autenticação
 
-Resposta esperada:
+As rotas de `UserController` usam os headers propagados pelo gateway:
 
-{
-"token": "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9..."
-}
+- `X-User`
+- `X-User-Id`
+- `X-User-Role`
 
+Por isso, para as rotas protegidas, o fluxo mais seguro e aderente ao projeto atual é consumir pelo `api-gateway` em `http://localhost:8080`.
 
-cURL:
+As rotas públicas de autenticação podem ser acessadas diretamente em `http://localhost:8001` ou via gateway.
 
-curl -X POST http://localhost:8080/api/auth/login \
--H "Content-Type: application/json" \
--d '{
-"email": "maria@email.com",
-"password": "123456"
-}'
+## Importação de usuários via Excel
 
-👤 Buscar Usuário (rota protegida)
+Endpoint:
 
-GET /api/users/{id}
+- `POST /api/excel/upload`
 
-Header:
+Colunas lidas no código atual:
 
-Authorization: Bearer SEU_TOKEN_AQUI
+1. nome
+2. email
+3. senha
 
+Validações identificadas na importação:
 
-cURL:
+- campos obrigatórios
+- formato básico de email
+- senha mínima de 6 caracteres
+- duplicidade de email
 
-curl -X GET http://localhost:8080/api/users/1 \
--H "Authorization: Bearer SEU_TOKEN_AQUI"
+## Kafka
 
-📋 Listar Usuários (rota protegida)
+Foi identificado um producer no projeto:
 
-GET /api/users
+- classe: `UserProducer`
+- tópico: `users`
 
-cURL:
+O producer serializa `UserResponseDTO` em JSON antes do envio.
 
-curl -X GET http://localhost:8080/api/users \
--H "Authorization: Bearer SEU_TOKEN_AQUI"
+## Testes existentes
 
-❌ Deletar Usuário (rota protegida)
+- `AuthControllerTest`
+- `UserControllerTest`
+- `ListUsersUseCaseTest`
+- `UserRepositoryJpaAdapterTest`
+- `ContextTest`
 
-DELETE /api/users/{id}
+## Observações relevantes do estado atual
 
-curl -X DELETE http://localhost:8080/api/users/1 \
--H "Authorization: Bearer SEU_TOKEN_AQUI"
-
-🧠 Fluxo de Autenticação (JWT)
-[Cliente]
-|
-| POST /api/auth/login
-v
-[User Service]
-|
-| Gera JWT
-v
-[Cliente recebe Token]
-|
-| Envia "Authorization: Bearer TOKEN"
-v
-[Rotas Protegidas]
-
-🧱 Arquitetura do Módulo User (Clean Architecture)
-┌──────────────────────────────┐
-│        Controller            │  ← Camada de entrada (REST)
-│  (AuthController, UserController)
-└───────────────▲──────────────┘
-│
-┌───────────────┴──────────────┐
-│      Application Service     │  ← Regras de negócio
-│     (UserApplicationService) │
-└───────────────▲──────────────┘
-│
-┌───────────────┴──────────────┐
-│           Domain             │  ← Entidades e regras
-│           (User)             │
-└───────────────▲──────────────┘
-│
-┌───────────────┴──────────────┐
-│        Infrastructure        │  ← Banco, JPA, JWT
-│     (Repository, Security)   │
-└──────────────────────────────┘
-
-🗄️ Exemplo de Configuração (application.yml)
-server:
-port: 8080
-
-spring:
-datasource:
-url: jdbc:postgresql://localhost:5432/controle_gastos
-username: postgres
-password: postgres
-jpa:
-hibernate:
-ddl-auto: update
-show-sql: true
-
-security:
-jwt:
-secret: MINHA_CHAVE_SECRETA_SUPER_SEGURA
-expiration: 86400000
-
-🧪 Usuário de Teste (Opcional)
-
-Você pode criar um usuário inicial para testes:
-
-{
-"name": "Admin",
-"email": "admin@email.com",
-"password": "admin123",
-"type": "ADMIN"
-}
-
-⚠️ Erros Comuns
-
-❌ 401 Unauthorized
-➡️ Token JWT não enviado ou expirado
-
-❌ 400 Bad Request
-➡️ JSON inválido ou campos obrigatórios ausentes
-
-❌ 409 Conflict
-➡️ Email já cadastrado
-
-
-Este serviço faz parte de um projeto open source. Se quiser contribuir:
-
-Faça um fork
-
-Crie uma branch com a mudança (git checkout -b feature/minha-feature)
-
-Envie um pull request
-
-Toda contribuição é bem-vinda!
+- o serviço utiliza `UUID` para identificação de usuários
+- há autenticação JWT no próprio serviço
+- o consumo via gateway é o caminho principal para as rotas protegidas
+- os endpoints de Excel estão anotados com `@PreAuthorize("hasRole('ADMIN')")`
+- não foi identificada, durante esta análise, configuração explícita de `@EnableMethodSecurity` no módulo

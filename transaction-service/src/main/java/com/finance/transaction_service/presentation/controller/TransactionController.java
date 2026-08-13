@@ -142,7 +142,7 @@ public class TransactionController {
             @RequestParam(required = false)
             String category,
 
-            @Parameter(description = "INCOME ou EXPENSE")
+            @Parameter(description = "DEPOSIT, WITHDRAW, TRANSFER ou PURCHASE")
             @RequestParam(required = false)
             String type,
 

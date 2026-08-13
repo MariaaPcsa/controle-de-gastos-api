@@ -1,6 +1,7 @@
 package com.finance.analytics_service.infrastructure.kafka;
 
 import com.fasterxml.jackson.databind.ObjectMapper;
+import com.fasterxml.jackson.datatype.jsr310.JavaTimeModule;
 import com.finance.analytics_service.AnalysisApplicationService;
 import com.finance.analytics_service.infrastructure.kafka.dto.TransactionEventDTO;
 import com.finance.analytics_service.infrastructure.persistence.entity.ExpenseEntity;
@@ -21,6 +22,7 @@ public class TransactionConsumer {
 
     public TransactionConsumer(AnalysisApplicationService useCase) {
         this.useCase = useCase;
+        this.mapper.registerModule(new JavaTimeModule());
     }
 
     @KafkaListener(topics = "transaction.created", groupId = "analysis-service")

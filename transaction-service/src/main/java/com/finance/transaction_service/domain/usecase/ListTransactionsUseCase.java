@@ -3,6 +3,7 @@ package com.finance.transaction_service.domain.usecase;
 import com.finance.transaction_service.domain.model.Transaction;
 import com.finance.transaction_service.domain.repository.TransactionRepository;
 
+import java.util.ArrayList;
 import java.util.List;
 import java.util.UUID;
 
@@ -25,7 +26,7 @@ public class ListTransactionsUseCase {
         }
 
         List<Transaction> transactions =
-                repository.findByUserId(userId);
+                new ArrayList<>(repository.findByUserId(userId));
 
         // Mais recentes primeiro
         transactions.sort(

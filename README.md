@@ -1,495 +1,369 @@
-💰 Sobre o Serviço
-🧱 Arquitetura do Sistema
+# Controle de Gastos API
 
+Plataforma de gestão financeira baseada em microserviços, construída com Java 21, Spring Boot, PostgreSQL, Kafka, JWT e Docker.
 
-                ┌──────────────────────┐
-                │     API GATEWAY      │
-                │ Spring Cloud Gateway │
-                └──────────┬───────────┘
-                           │
-        ┌──────────────────┼──────────────────┐
-        │                  │                  │
-┌──────────────┐   ┌──────────────┐   ┌──────────────┐
-│ USER SERVICE │   │ TRANSACTION  │   │ ANALYTICS    │
-│              │   │ SERVICE      │   │ SERVICE      │
-└──────┬───────┘   └──────┬───────┘   └──────┬───────┘
-       │                  │                  │
-       │                  │                  │
-       └──────────┬───────▼────────┬─────────┘
-                  │     KAFKA      │
-                  │  (EVENT BUS)   │
-                  └──────┬─────────┘
-                         │
-              ┌──────────▼──────────┐
-              │ ANALYTICS CONSUMER  │
-              └──────────────────────┘
+O repositório está organizado como um projeto Maven multi-módulo e atualmente possui quatro serviços principais:
 
-                 ┌─────────────────────┐
-                 │     API Gateway     │
-                 │       :8080         │
-                 └──────────┬──────────┘
-                            │
-            ┌───────────────┼───────────────┐
-            ↓               ↓               ↓
-       User :8001      Transaction :8002   Analytics :8003
-            │               │               │
-            ↓               ↓               ↓
-       PostgreSQL       PostgreSQL       PostgreSQL
-        :5433             :5434             :5435
-                            │
-                            ↓
-                         Kafka
-                        :29092
-                            │
-                            ↓
-                       Zookeeper
-                        :22181
+- `user`
+- `transaction-service`
+- `analytics-service`
+- `api-gateway`
 
+## Arquitetura atual
 
+```text
+                     ┌───────────────────┐
+                     │    API Gateway    │
+                     │      :8080        │
+                     └─────────┬─────────┘
+                               │
+             ┌─────────────────┼─────────────────┐
+             │                 │                 │
+             ▼                 ▼                 ▼
+        user-service     transaction-service   analytics-service
+           :8001               :8002               :8003
+             │                   │                   │
+             ▼                   ▼                   ▼
+        PostgreSQL          PostgreSQL          PostgreSQL
+         user_db              tx_db            analytics_db
+           :5433              :5434               :5435
+                                  │
+                                  ▼
+                               Kafka
+                               :29092
+                                  │
+                                  ▼
+                              Zookeeper
+                               :22181
+```
 
+## Serviços do projeto
 
-Guia rápido para executar o sistema localmente (Docker Compose)
+### `user`
 
-Requisitos:
-- Docker Desktop (Windows)
-- Maven (para build local) ou usar os JARs em /target
+Responsável por:
 
-Passos:
-1) Build dos microsserviços (no Windows PowerShell):
+- cadastro de usuários
+- autenticação com JWT
+- listagem e busca de usuários
+- atualização, exclusão lógica e reativação
+- alteração de role
+- importação de usuários via Excel
 
-   cd "C:\Users\maria\Desktop\desafio beca\controle-de-gastos-api"; mvn -T1C -DskipTests package
+Documentação específica:
 
-2) Subir infra e serviços com docker-compose:
+- `user/Readme.md`
 
-   cd "C:\Users\maria\Desktop\desafio beca\controle-de-gastos-api"; docker compose up --build
+### `transaction-service`
 
-   Isso iniciará: Zookeeper, Kafka, 3 Postgres, api-gateway (8080), user (8001), transaction-service (8002), analytics-service (8003)
+Responsável por:
 
-3) Inicializar tópicos Kafka (dentro de um container com kafka-tools ou usar script local):
+- criação de transações
+- listagem com filtros
+- atualização e exclusão
+- importação de transações via Excel
+- conversão de moeda para BRL
+- publicação de evento Kafka na criação de transações
 
-   # exemplo usando o container kafka
-   docker exec -it <kafka_container_id> bash -c "kafka-topics.sh --create --bootstrap-server localhost:9092 --topic transaction.created --partitions 3 --replication-factor 1"
+Documentação específica:
 
-   Ou no host (se tiver kafka tools): ./scripts/init-topics.sh
+- `transaction-service/Readme.md`
 
-4) Endpoints principais (via API Gateway - 8080):
-    - POST /auth/register -> registrar usuário
-    - POST /auth/login -> obter token JWT
-    - /users/** -> CRUD usuários
-    - /transactions/** -> CRUD transações
-    - /analytics/** -> relatórios e downloads
+### `analytics-service`
 
-5) 🌐 Swagger/OpenAPI:
-    - user: http://localhost:8001/swagger-ui.html (ou via gateway /api/users/swagger-ui.html)
-    - transaction: http://localhost:8002/swagger-ui.html
-    - analytics: http://localhost:8003/swagger-ui.html
+Responsável por:
 
-6) Import Excel:
-    - Envie via endpoint POST /transactions/upload (multipart/form-data)
-    - O serviço processará linhas e retornará relatório de importação
+- resumo financeiro por usuário
+- geração de relatório Excel
+- geração de relatório PDF
+- consumo de eventos Kafka de transações
 
-7) Observabilidade básica:
-    - /actuator/health em cada serviço
+Documentação específica:
 
-8) Repositório contém exemplos de upload: `user/users_upload.xlsx`, `user_upload_test_cases.xlsx`, `examples/transactions_upload_example.csv`
+- `analytics-service/Readme.md`
 
-Se você prefere não usar Docker, você pode executar cada serviço via IDE (Spring Boot) apontando as variáveis de ambiente para os bancos locais e para Kafka.
+### `api-gateway`
 
+Responsável por:
 
+- entrada única da plataforma
+- validação de JWT no nível de borda
+- roteamento para os microsserviços
+- agregação de documentação Swagger/OpenAPI
+- propagação de identidade via headers internos
 
+Documentação específica:
 
+- `api-gateway/README.md`
 
-🧩 Microserviços
-👤 User Service → gerenciamento de usuários e autenticação
-💳 Transaction Service → gerenciamento de transações financeiras
-📊 Analytics Service → processamento e análise de eventos
-🌐 API Gateway → ponto único de entrada
-📨 Kafka + Zookeeper → comunicação assíncrona entre serviços
-⚙️ Comandos do Projeto
+## Tecnologias utilizadas
 
-mes antes de rodar o projeto, certifique-se de que não há containers antigos em execução. Se houver, use:
-docker compose down -v
-depois docker compose up --build -d
-Serviços e portas
-mvn clean package
-Agora vamos reconstruir
+- Java 21
+- Spring Boot 3.2.5
+- Spring Security
+- Spring Web / WebFlux
+- Spring Cloud Gateway
+- Spring Data JPA
+- PostgreSQL
+- Apache Kafka
+- JWT
+- Swagger / OpenAPI
+- Docker / Docker Compose
+- Maven
+- Apache POI
+- OpenPDF
+- Spring Boot Actuator
 
-Primeiro derrube os containers:
+## Portas dos serviços
 
-docker compose down
+| Componente | Porta |
+|-----------|------:|
+| API Gateway | `8080` |
+| User Service | `8001` |
+| Transaction Service | `8002` |
+| Analytics Service | `8003` |
+| PostgreSQL User | `5433` |
+| PostgreSQL Transaction | `5434` |
+| PostgreSQL Analytics | `5435` |
+| Kafka | `29092` |
+| Zookeeper | `22181` |
 
-Depois reconstrua:
-
-docker compose up -d --build
-
-Aguarde uns 20–30 segundos e execute:
-
-docker compose ps
-
-O objetivo é aparecer:
-
-api-gateway          Up
-user                 Up
-transaction-service  Up
-analytics-service    Up
-kafka                Up (healthy)
-postgres-user        Up (healthy)
-postgres-tx          Up (healthy)
-postgres-analytics   Up (healthy)
-
-Depois confira especificamente o user:
-
-docker compose logs user --tail=100
-
-E o Transaction:
-
-docker compose logs transaction-service --tail=100
-
-E Analytics:
-
-docker compose logs analytics-service --tail=100
-
-ou rodar o Gateway localmente:
-z
-docker compose stop api-gateway
-
-mvn spring-boot:run
-
-
-🗄️ Banco de Dados
+## Banco de dados
 
 Cada serviço possui seu próprio banco PostgreSQL:
 
-user_db
-transaction_db
-analytics_db
-🔥 Possível Problema (Volume Docker Antigo)
-
-Mesmo corrigindo configurações, o banco pode não atualizar por causa de volumes antigos.
-
-💣 Solução:
-docker-compose down -v
-docker-compose up -d --build
-📄 README.md
-💰 Controle de Gastos API (Microserviços)
-
-Sistema de gestão financeira distribuído baseado em arquitetura de microserviços, desenvolvido com Spring Boot, JWT, Kafka e PostgreSQL, com foco em escalabilidade, segurança e boas práticas de engenharia de software.
-
-🚀 Arquitetura do Sistema
-👤 User Service → usuários e autenticação
-💳 Transaction Service → transações financeiras
-📊 Analytics Service → análise via eventos
-🌐 API Gateway → entrada única
-📨 Kafka → mensageria entre serviços
-🧱 Tecnologias Utilizadas
-Java 21
-Spring Boot
-Spring Security + JWT
-Spring Data JPA
-PostgreSQL
-Apache Kafka
-Docker & Docker Compose
-Hibernate
-Maven
-🔐 Autenticação (JWT)
-Exemplo de payload:
-{
-  "sub": "user@email.com",
-  "id": "uuid-do-usuario",
-  "role": "ADMIN",
-  "iat": 1710000000,
-  "exp": 1710003600
-}
-📦 Funcionalidades
-👤 Usuários
-Criar usuário
-Login
-Atualizar usuário
-Alterar role (ADMIN / USER)
-Soft delete
-Reativação
-Busca por ID e email
-💳 Transações
-Criar transação (DEPOSIT / WITHDRAW)
-Listar transações
-Filtrar por usuário
+- `user_db`
+- `tx_db`
+- `analytics_db`
 
-Como agora todas as rotas do User estão funcionando, podemos testar tudo pelo Insomnia usando uma única base:
+Esse isolamento está refletido no `docker-compose.yml` e nas configurações `application-dev.yml` e `application-docker.yml` de cada módulo.
 
-http://localhost:8080/api
+## Segurança
 
-O ponto mais importante é: faça o Login primeiro e use o JWT nas rotas protegidas.
+### Estratégia atual
 
-1. Login
+- o `api-gateway` valida o JWT na borda
+- o gateway propaga os headers internos:
+  - `X-User`
+  - `X-User-Id`
+  - `X-User-Role`
+- os microsserviços também possuem tratamentos próprios de autenticação/autorização conforme a implementação de cada módulo
 
-POST
+### Rotas públicas principais
 
-http://localhost:8080/api/auth/login
+- `POST /api/auth/register`
+- `POST /api/auth/login`
+- rotas de Swagger/OpenAPI
 
-Body → JSON:
+### Observação importante
 
-{
-"email": "admin@finance.com",
-"password": "SUA_SENHA"
-}
+O `analytics-service` não possui Spring Security no módulo atual. Portanto, o acesso direto a `http://localhost:8003` não está protegido por JWT no próprio serviço, embora o acesso pelo gateway continue sujeito à autenticação do gateway.
 
-Resposta esperada:
+## Endpoints principais via gateway
 
-{
-"token": "eyJhbGciOiJIUzI1NiJ9..."
-}
+Base principal:
 
-Copie somente o valor do token.
+- `http://localhost:8080`
 
-2. Listar usuários
+### Autenticação e usuários
 
-GET
+- `POST /api/auth/register`
+- `POST /api/auth/login`
+- `GET /api/users`
+- `GET /api/users/{id}`
+- `POST /api/users`
+- `PUT /api/users/{id}`
+- `DELETE /api/users/{id}`
+- `PATCH /api/users/{id}/role`
+- `PATCH /api/users/{id}/reactivate`
+- `POST /api/excel/upload`
+- `POST /api/excel/errors/download`
 
-http://localhost:8080/api/users
+### Transações
 
-No Insomnia:
+- `POST /api/transactions`
+- `GET /api/transactions`
+- `PUT /api/transactions/{id}`
+- `DELETE /api/transactions/{id}`
+- `POST /api/transactions/upload`
 
-Auth → Bearer Token
+### Analytics
 
-Cole:
+- `GET /api/analysis/summary/{userId}`
+- `GET /api/analysis/report/excel/{userId}`
+- `GET /api/analysis/report/pdf/{userId}`
 
-SEU_TOKEN
+## Swagger / OpenAPI
 
-Resposta esperada:
+### Documentação centralizada
 
-[
-{
-"id": "...",
-"name": "Admin",
-"email": "admin@finance.com",
-"type": "ADMIN"
-}
-]
-3. Buscar usuário
+- `http://localhost:8080/swagger-ui.html`
 
-Pegue o id de um usuário retornado anteriormente.
+### Documentação individual
 
-GET
+- `http://localhost:8001/swagger-ui.html`
+- `http://localhost:8002/swagger-ui.html`
+- `http://localhost:8003/swagger-ui.html`
 
-http://localhost:8080/api/users/{id}
+### OpenAPI agregado pelo gateway
 
-Exemplo:
+- `http://localhost:8080/user/v3/api-docs`
+- `http://localhost:8080/transaction/v3/api-docs`
+- `http://localhost:8080/analytics/v3/api-docs`
 
-http://localhost:8080/api/users/606a1fa8-a18f-4215-9452-d0824b54486e
+## Kafka
 
-Auth → Bearer Token
+### Situação atual identificada no código
 
-SEU_TOKEN
+- producer em `transaction-service` para o tópico `transaction.created`
+- consumer em `analytics-service` para o tópico `transaction.created`
+- producer em `user` para o tópico `users`
 
-Esperado:
+### Observação importante
 
-200 OK
-4. Criar usuário
+Foram identificadas inconsistências técnicas em contratos Kafka do estado atual, especialmente na representação de `userId` entre `transaction-service` e `analytics-service`.
 
-POST
+## Como executar com Docker Compose
 
-http://localhost:8080/api/users
+Pré-requisito:
 
-Auth → Bearer Token
+- copiar `.env.example` para `.env`
 
-SEU_TOKEN
+```powershell
+Set-Location "C:\Users\maria\Desktop\desafio beca\controle-de-gastos-api"
+Copy-Item ".env.example" ".env" -Force
+docker compose up -d --build
+```
 
-Body → JSON
+Para verificar o status:
 
-{
-"name": "Maria Teste",
-"email": "maria.teste@finance.com",
-"password": "123456",
-"type": "USER"
-}
+```powershell
+docker compose ps
+```
 
-Esperado:
+Para acompanhar logs:
 
-200 OK
+```powershell
+docker compose logs api-gateway --tail=100
+docker compose logs user --tail=100
+docker compose logs transaction-service --tail=100
+docker compose logs analytics-service --tail=100
+```
 
-Guarde o id retornado. Vamos utilizá-lo nos próximos testes.
+Se houver problemas com volumes antigos do PostgreSQL:
 
-5. Atualizar usuário
+```powershell
+docker compose down -v
+docker compose up -d --build
+```
 
-PUT
+## Como executar localmente
 
-http://localhost:8080/api/users/ID_DO_USUARIO
+### 1. Subir infraestrutura compartilhada
 
-Exemplo:
+```powershell
+Set-Location "C:\Users\maria\Desktop\desafio beca\controle-de-gastos-api"
+Copy-Item ".env.example" ".env" -Force
+docker compose up -d zookeeper kafka postgres-user postgres-tx postgres-analytics
+```
 
-http://localhost:8080/api/users/12345678-1234-1234-1234-123456789012
+### 2. Subir os serviços
 
-Auth → Bearer Token
+Em terminais separados:
 
-Body:
-
-{
-"name": "Maria Atualizada",
-"email": "maria.atualizada@finance.com",
-"password": "654321",
-"type": "USER"
-}
-
-Esperado:
-
-200 OK
-6. Alterar role
-
-Agora vamos testar:
-
-USER → ADMIN
-
-PATCH
-
-http://localhost:8080/api/users/ID_DO_USUARIO/role
-
-Auth → Bearer Token
-
-Body:
-
-{
-"type": "ADMIN"
-}
-
-Esperado:
-
-200 OK
-
-Resposta deve apresentar:
-
-{
-"type": "ADMIN"
-}
-7. Reativar usuário
-
-PATCH
-
-http://localhost:8080/api/users/ID_DO_USUARIO/reactivate
-
-Auth → Bearer Token
-
-Não precisa de Body.
-
-Esperado:
-
-200 OK
-8. Deletar usuário
-
-Faça por último, porque depois desse teste o usuário poderá não existir mais.
-
-DELETE
-
-http://localhost:8080/api/users/ID_DO_USUARIO
-
-Auth → Bearer Token
-
-Esperado:
-
-204 No Content
-9. Teste muito importante: sem TOKEN
-
-Agora queremos confirmar que a segurança realmente está funcionando.
-
-Faça:
-
-GET
-
-http://localhost:8080/api/users
-
-Remova o Bearer Token.
-
-Resultado esperado:
-
-401 Unauthorized
-
-Se retornar 401, ótimo. 🔐
-
-10. Testar TOKEN inválido
-
-Coloque:
-
-Auth → Bearer Token
-
-token-invalido
-
-Faça:
-
-GET http://localhost:8080/api/users
-
-Esperado:
-
-401 Unauthorized
-
-Estrutura da Collection
-Controle de Gastos API
-│
-├── 🔐 Auth
-│   ├── Registrar usuário
-│   └── Login
-│
-├── 👤 Usuários
-│   ├── Listar usuários
-│   ├── Buscar usuário por ID
-│   ├── Criar usuário
-│   ├── Atualizar usuário
-│   ├── Deletar usuário
-│   ├── Alterar role
-│   └── Reativar usuário
-│
-├── 💰 Transações
-│   ├── Criar transação
-│   ├── Listar transações
-│   ├── Buscar transação
-│   ├── Atualizar transação
-│   └── Deletar transação
-│
-├── 📊 Analytics
-│   └── Resumo financeiro
-│
-└── 📥 Excel
-├── Upload usuários
-└── Download erros
-
-
-Publicação de eventos no Kafka
-📊 Analytics
-Consumo de eventos Kafka
-Processamento de dados financeiros
-Base para relatórios
-🧪 Como rodar o projeto
-1️⃣ Subir infraestrutura
-docker-compose up -d
-2️⃣ Rodar serviços
-cd user
+```powershell
+Set-Location "C:\Users\maria\Desktop\desafio beca\controle-de-gastos-api\user"
 mvn spring-boot:run
+```
 
-cd transaction-service
+```powershell
+Set-Location "C:\Users\maria\Desktop\desafio beca\controle-de-gastos-api\transaction-service"
 mvn spring-boot:run
+```
 
-cd analytics-service
+```powershell
+Set-Location "C:\Users\maria\Desktop\desafio beca\controle-de-gastos-api\analytics-service"
 mvn spring-boot:run
-🌐 Swagger
+```
 
+```powershell
+Set-Location "C:\Users\maria\Desktop\desafio beca\controle-de-gastos-api\api-gateway"
+mvn spring-boot:run
+```
 
-Eventos via Kafka:
+## Build do projeto
 
-criação de transação
-atualização de saldo
-auditoria de eventos
-⚠️ Observações
-IDs migrados para UUID
-JWT usa UUID como String
-Kafka centraliza comunicação
-Arquitetura baseada em Clean Architecture + DDD
-🧠 Conceitos aplicados
-Microserviços
-DDD
-Clean Architecture
-Event Driven Architecture
-JWT Security
-Soft Delete
-Separação de contextos
-👨‍💻 Autor
+Na raiz:
 
-Desenvolvido por Maria
-Projeto educacional focado em arquitetura de sistemas financeiros modernos.
+```powershell
+Set-Location "C:\Users\maria\Desktop\desafio beca\controle-de-gastos-api"
+mvn clean package
+```
+
+## Testes
+
+### Módulos com testes identificados
+
+- `user`
+- `transaction-service`
+- `analytics-service`
+
+### Situação atual observada
+
+- `user` possui testes de controller, domínio e persistência
+- `transaction-service` possui testes unitários, controller e integração com Kafka embutido
+- `analytics-service` possui testes de geração de relatório e classe de teste de controller
+- `api-gateway` não possui testes automatizados visíveis em `src/test/java`
+
+Para rodar os testes do projeto inteiro:
+
+```powershell
+Set-Location "C:\Users\maria\Desktop\desafio beca\controle-de-gastos-api"
+mvn test
+```
+
+## Observabilidade
+
+Itens identificados no projeto atual:
+
+- Spring Boot Actuator
+- endpoint de health/info/metrics no gateway
+- logs configurados em nível `INFO` para gateway e security
+- healthcheck no `docker-compose.yml` para Kafka e bancos PostgreSQL
+
+## Arquivos auxiliares úteis
+
+- `.env.example`
+- `docker-compose.yml`
+- `scripts/up.ps1`
+- `scripts/create-secrets.ps1`
+- `scripts/init-topics.sh`
+- `postman/collection.json`
+- `insomnia/finance-api-collection.json`
+
+## Problemas e limitações já identificados
+
+- inconsistência entre tipos de `userId` em partes do domínio e integrações
+- inconsistências de contrato Kafka entre `transaction-service` e `analytics-service`
+- documentação anterior muito divergente do código atual
+- cobertura de testes desigual entre os módulos
+- ausência de testes automatizados no `api-gateway`
+- `analytics-service` com lacunas de segurança quando acessado diretamente
+
+## Observação final
+
+Este repositório deve ser tratado como uma plataforma em evolução incremental.
+
+A fonte primária de verdade do sistema é:
+
+1. implementação atual
+2. testes existentes
+3. documentação dos módulos
+4. configurações e `docker-compose.yml`
+
+Para detalhes operacionais de cada serviço, consulte também:
+
+- `user/Readme.md`
+- `transaction-service/Readme.md`
+- `analytics-service/Readme.md`
+- `api-gateway/README.md`
