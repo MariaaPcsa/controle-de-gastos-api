@@ -11,25 +11,57 @@ public class UpdateTransactionUseCase {
 
     private final TransactionRepository repository;
 
-    public UpdateTransactionUseCase(TransactionRepository repository) {
+    public UpdateTransactionUseCase(
+            TransactionRepository repository) {
+
         this.repository = repository;
     }
 
-    public Transaction execute(UUID id,
-                               String description,
-                               BigDecimal amount,
-                               BigDecimal originalAmount,
-                               String category,
-                               TransactionType type) {
+    public Transaction execute(
+            UUID transactionId,
+            String description,
+            BigDecimal amount,
+            BigDecimal originalAmount,
+            String category,
+            TransactionType type,
+            UUID userId) {
 
-        // Busca transação existente
-        Transaction existing = repository.findById(id)
-                .orElseThrow(() -> new RuntimeException("Transação não encontrada"));
+        if (transactionId == null) {
+            throw new IllegalArgumentException(
+                    "Transaction ID é obrigatório"
+            );
+        }
 
-        // Atualiza campos
-        Transaction updated = existing.update(description, amount, originalAmount, category, type);
+        if (userId == null) {
+            throw new IllegalArgumentException(
+                    "User ID é obrigatório"
+            );
+        }
 
-        // Salva e retorna
+        Transaction existing =
+                repository.findById(transactionId)
+                        .orElseThrow(() ->
+                                new IllegalArgumentException(
+                                        "Transação não encontrada"
+                                )
+                        );
+
+        // 🔐 REGRA DE PROPRIEDADE
+        if (!existing.getUserId().equals(userId)) {
+            throw new SecurityException(
+                    "Você não possui permissão para atualizar esta transação"
+            );
+        }
+
+        Transaction updated =
+                existing.update(
+                        description,
+                        amount,
+                        originalAmount,
+                        category,
+                        type
+                );
+
         return repository.save(updated);
     }
 }

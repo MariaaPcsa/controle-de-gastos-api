@@ -13,13 +13,19 @@ public class TransactionEntity {
 
     @Id
     @GeneratedValue(strategy = GenerationType.UUID)
-    private UUID id; // ✅ agora UUID
+    private UUID id;
 
-    private Long userId;
+    // ID do usuário autenticado
+    private UUID userId;
+
     private String description;
+
     private BigDecimal amount;
-    private BigDecimal originalAmount; // ✅ adicionado
+
+    private BigDecimal originalAmount;
+
     private String currency;
+
     private String category;
 
     @Enumerated(EnumType.STRING)
@@ -27,31 +33,83 @@ public class TransactionEntity {
 
     private LocalDateTime createdAt;
 
-    // ================= GETTERS & SETTERS =================
-    public UUID getId() { return id; }
-    public void setId(UUID id) { this.id = id; }
+    // =========================================================
+    // GETTERS
+    // =========================================================
 
-    public Long getUserId() { return userId; }
-    public void setUserId(Long userId) { this.userId = userId; }
+    public UUID getId() {
+        return id;
+    }
 
-    public String getDescription() { return description; }
-    public void setDescription(String description) { this.description = description; }
+    public UUID getUserId() {
+        return userId;
+    }
 
-    public BigDecimal getAmount() { return amount; }
-    public void setAmount(BigDecimal amount) { this.amount = amount; }
+    public String getDescription() {
+        return description;
+    }
 
-    public BigDecimal getOriginalAmount() { return originalAmount; }
-    public void setOriginalAmount(BigDecimal originalAmount) { this.originalAmount = originalAmount; }
+    public BigDecimal getAmount() {
+        return amount;
+    }
 
-    public String getCurrency() { return currency; }
-    public void setCurrency(String currency) { this.currency = currency; }
+    public BigDecimal getOriginalAmount() {
+        return originalAmount;
+    }
 
-    public String getCategory() { return category; }
-    public void setCategory(String category) { this.category = category; }
+    public String getCurrency() {
+        return currency;
+    }
 
-    public TransactionType getType() { return type; }
-    public void setType(TransactionType type) { this.type = type; }
+    public String getCategory() {
+        return category;
+    }
 
-    public LocalDateTime getCreatedAt() { return createdAt; }
-    public void setCreatedAt(LocalDateTime createdAt) { this.createdAt = createdAt; }
+    public TransactionType getType() {
+        return type;
+    }
+
+    public LocalDateTime getCreatedAt() {
+        return createdAt;
+    }
+
+    // =========================================================
+    // SETTERS
+    // =========================================================
+
+    public void setId(UUID id) {
+        this.id = id;
+    }
+
+    public void setUserId(UUID userId) {
+        this.userId = userId;
+    }
+
+    public void setDescription(String description) {
+        this.description = description;
+    }
+
+    public void setAmount(BigDecimal amount) {
+        this.amount = amount;
+    }
+
+    public void setOriginalAmount(BigDecimal originalAmount) {
+        this.originalAmount = originalAmount;
+    }
+
+    public void setCurrency(String currency) {
+        this.currency = currency;
+    }
+
+    public void setCategory(String category) {
+        this.category = category;
+    }
+
+    public void setType(TransactionType type) {
+        this.type = type;
+    }
+
+    public void setCreatedAt(LocalDateTime createdAt) {
+        this.createdAt = createdAt;
+    }
 }

@@ -35,6 +35,27 @@ spring:
           predicates:
             - Path=/api/analysis/**
 
+        - id: user-openapi
+          uri: http://user:8001
+          predicates:
+            - Path=/user/v3/api-docs
+          filters:
+            - RewritePath=/user/v3/api-docs,/v3/api-docs
+
+        - id: transaction-openapi
+          uri: http://transaction-service:8002
+          predicates:
+            - Path=/transaction/v3/api-docs
+          filters:
+            - RewritePath=/transaction/v3/api-docs,/v3/api-docs
+
+        - id: analytics-openapi
+          uri: http://analytics-service:8003
+          predicates:
+            - Path=/analytics/v3/api-docs
+          filters:
+            - RewritePath=/analytics/v3/api-docs,/v3/api-docs
+
       # ======================================================
       # DEFAULT FILTERS
       # ======================================================
@@ -78,3 +99,11 @@ springdoc:
 
   swagger-ui:
     path: /swagger-ui.html
+    disable-swagger-default-url: true
+    urls:
+      - name: user
+        url: /user/v3/api-docs
+      - name: transaction
+        url: /transaction/v3/api-docs
+      - name: analytics
+        url: /analytics/v3/api-docs

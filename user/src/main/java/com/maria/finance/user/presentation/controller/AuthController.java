@@ -40,13 +40,11 @@ public class AuthController {
                     .body(Map.of("error", "Email e senha são obrigatórios"));
         }
 
-        String hashedPassword = passwordEncoder.encode(dto.password());
-
         User user = new User(
                 null,
                 dto.name(),
                 dto.email(),
-                hashedPassword,
+                dto.password(),
                 UserType.USER);
 
         User created = service.create(user);

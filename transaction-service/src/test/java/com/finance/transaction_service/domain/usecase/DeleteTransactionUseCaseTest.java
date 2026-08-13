@@ -3,6 +3,7 @@ package com.finance.transaction_service.domain.usecase;
 import com.finance.transaction_service.domain.model.Transaction;
 import com.finance.transaction_service.domain.model.TransactionType;
 import com.finance.transaction_service.domain.repository.TransactionRepository;
+
 import org.junit.jupiter.api.Test;
 
 import java.math.BigDecimal;
@@ -10,58 +11,197 @@ import java.time.LocalDateTime;
 import java.util.Optional;
 import java.util.UUID;
 
-import static org.junit.jupiter.api.Assertions.assertDoesNotThrow;
+import static org.junit.jupiter.api.Assertions.*;
 import static org.mockito.Mockito.*;
 
 class DeleteTransactionUseCaseTest {
 
     @Test
     void should_delete_transaction_successfully() {
-        // Mock do repositório
-        TransactionRepository repo = mock(TransactionRepository.class);
-        DeleteTransactionUseCase useCase = new DeleteTransactionUseCase(repo);
 
-        // Cria uma transação existente usando restore() e UUID
-        Transaction existing = Transaction.restore(
-                UUID.randomUUID(),           // ID da transação
-                1L,                           // userId
-                "Salário",                    // descrição
-                BigDecimal.valueOf(1000),     // amount
-                BigDecimal.valueOf(1000),     // originalAmount
-                "BRL",                        // currency
-                "SALÁRIO",                    // category
-                TransactionType.DEPOSIT,      // type
-                LocalDateTime.now()           // createdAt
+        // =====================================================
+        // ARRANGE
+        // =====================================================
+
+        TransactionRepository repo =
+                mock(TransactionRepository.class);
+
+        DeleteTransactionUseCase useCase =
+                new DeleteTransactionUseCase(repo);
+
+        UUID userId = UUID.randomUUID();
+
+        Transaction existing =
+                Transaction.restore(
+                        UUID.randomUUID(),       // transactionId
+                        userId,                  // userId
+                        "Salário",
+                        BigDecimal.valueOf(1000),
+                        BigDecimal.valueOf(1000),
+                        "BRL",
+                        "SALÁRIO",
+                        TransactionType.DEPOSIT,
+                        LocalDateTime.now()
+                );
+
+        UUID transactionId =
+                existing.getId();
+
+        when(repo.findById(transactionId))
+                .thenReturn(Optional.of(existing));
+
+        // =====================================================
+        // ACT
+        // =====================================================
+
+        assertDoesNotThrow(() ->
+                useCase.execute(
+                        transactionId,
+                        userId
+                )
         );
 
-        UUID transactionId = existing.getId();
+        // =====================================================
+        // ASSERT
+        // =====================================================
 
-        // Configuração do mock
-        when(repo.findById(transactionId)).thenReturn(Optional.of(existing));
-        doNothing().when(repo).deleteById(transactionId);
+        verify(repo, times(1))
+                .findById(transactionId);
 
-        // Executa o use case e garante que não lança exceção
-        assertDoesNotThrow(() -> useCase.execute(transactionId));
-
-        // Verifica se deleteById foi chamado corretamente
-        verify(repo, times(1)).deleteById(transactionId);
+        verify(repo, times(1))
+                .deleteById(transactionId);
     }
 
     @Test
     void should_throw_exception_if_transaction_not_found() {
-        TransactionRepository repo = mock(TransactionRepository.class);
-        DeleteTransactionUseCase useCase = new DeleteTransactionUseCase(repo);
 
-        UUID fakeId = UUID.randomUUID();
-        when(repo.findById(fakeId)).thenReturn(Optional.empty());
+        // =====================================================
+        // ARRANGE
+        // =====================================================
 
-        // Deve lançar IllegalArgumentException quando a transação não existe
-        assertDoesNotThrow(() -> {
-            try {
-                useCase.execute(fakeId);
-            } catch (IllegalArgumentException e) {
-                // esperado
-            }
-        });
+        TransactionRepository repo =
+                mock(TransactionRepository.class);
+
+        DeleteTransactionUseCase useCase =
+                new DeleteTransactionUseCase(repo);
+
+        UUID transactionId =
+                UUID.randomUUID();
+
+        UUID userId =
+                UUID.randomUUID();
+
+        when(repo.findById(transactionId))
+                .thenReturn(Optional.empty());
+
+        // =====================================================
+        // ACT + ASSERT
+        // =====================================================
+
+        assertThrows(
+                IllegalArgumentException.class,
+                () -> useCase.execute(
+                        transactionId,
+                        userId
+                )
+        );
+
+        verify(repo, times(1))
+                .findById(transactionId);
+
+        verify(repo, never())
+                .deleteById(any(UUID.class));
+    }
+
+    @Test
+    void should_throw_exception_if_user_does_not_own_transaction() {
+
+        // =====================================================
+        // ARRANGE
+        // =====================================================
+
+        TransactionRepository repo =
+                mock(TransactionRepository.class);
+
+        DeleteTransactionUseCase useCase =
+                new DeleteTransactionUseCase(repo);
+
+        UUID transactionOwner =
+                UUID.randomUUID();
+
+        UUID authenticatedUser =
+                UUID.randomUUID();
+
+        Transaction existing =
+                Transaction.restore(
+                        UUID.randomUUID(),
+                        transactionOwner,
+                        "Salário",
+                        BigDecimal.valueOf(1000),
+                        BigDecimal.valueOf(1000),
+                        "BRL",
+                        "SALÁRIO",
+                        TransactionType.DEPOSIT,
+                        LocalDateTime.now()
+                );
+
+        UUID transactionId =
+                existing.getId();
+
+        when(repo.findById(transactionId))
+                .thenReturn(Optional.of(existing));
+
+        // =====================================================
+        // ACT + ASSERT
+        // =====================================================
+
+        assertThrows(
+                SecurityException.class,
+                () -> useCase.execute(
+                        transactionId,
+                        authenticatedUser
+                )
+        );
+
+        verify(repo, times(1))
+                .findById(transactionId);
+
+        verify(repo, never())
+                .deleteById(any(UUID.class));
+    }
+
+    @Test
+    void should_throw_exception_if_user_id_is_null() {
+
+        // =====================================================
+        // ARRANGE
+        // =====================================================
+
+        TransactionRepository repo =
+                mock(TransactionRepository.class);
+
+        DeleteTransactionUseCase useCase =
+                new DeleteTransactionUseCase(repo);
+
+        UUID transactionId =
+                UUID.randomUUID();
+
+        // =====================================================
+        // ACT + ASSERT
+        // =====================================================
+
+        assertThrows(
+                IllegalArgumentException.class,
+                () -> useCase.execute(
+                        transactionId,
+                        null
+                )
+        );
+
+        verify(repo, never())
+                .findById(any(UUID.class));
+
+        verify(repo, never())
+                .deleteById(any(UUID.class));
     }
 }

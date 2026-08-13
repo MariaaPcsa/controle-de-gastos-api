@@ -3,43 +3,64 @@ package com.finance.transaction_service.infrastructure.persistence.mapper;
 import com.finance.transaction_service.domain.model.Transaction;
 import com.finance.transaction_service.infrastructure.persistence.entity.TransactionEntity;
 
-import java.time.LocalDateTime;
+public final class TransactionMapper {
 
-public class TransactionMapper {
-
-    // Converte Entity → Domain
-    public static Transaction toDomain(TransactionEntity e) {
-        if (e == null) return null;
-
-        // restore é método privado que aceita UUID
-        return Transaction.restore(
-                e.getId(),          // UUID
-                e.getUserId(),
-                e.getDescription(),
-                e.getAmount(),
-                e.getOriginalAmount(), // corrigido
-                e.getCurrency(),
-                e.getCategory(),
-                e.getType(),
-                e.getCreatedAt() != null ? e.getCreatedAt() : LocalDateTime.now()
-        );
+    private TransactionMapper() {
+        // Classe utilitária
     }
 
-    // Converte Domain → Entity
-    public static TransactionEntity toEntity(Transaction t) {
-        if (t == null) return null;
+    // =========================================================
+    // DOMAIN -> ENTITY
+    // =========================================================
 
-        TransactionEntity e = new TransactionEntity();
-        e.setId(t.getId());           // agora UUID
-        e.setUserId(t.getUserId());
-        e.setDescription(t.getDescription());
-        e.setAmount(t.getAmount());
-        e.setOriginalAmount(t.getOriginalAmount()); // corrigido
-        e.setCurrency(t.getCurrency());
-        e.setCategory(t.getCategory());
-        e.setType(t.getType());
-        e.setCreatedAt(t.getCreatedAt() != null ? t.getCreatedAt() : LocalDateTime.now());
+    public static TransactionEntity toEntity(
+            Transaction transaction) {
 
-        return e;
+        if (transaction == null) {
+            throw new IllegalArgumentException(
+                    "Transaction não pode ser nula"
+            );
+        }
+
+        TransactionEntity entity =
+                new TransactionEntity();
+
+        entity.setId(transaction.getId());
+        entity.setUserId(transaction.getUserId());
+        entity.setDescription(transaction.getDescription());
+        entity.setAmount(transaction.getAmount());
+        entity.setOriginalAmount(transaction.getOriginalAmount());
+        entity.setCurrency(transaction.getCurrency());
+        entity.setCategory(transaction.getCategory());
+        entity.setType(transaction.getType());
+        entity.setCreatedAt(transaction.getCreatedAt());
+
+        return entity;
+    }
+
+    // =========================================================
+    // ENTITY -> DOMAIN
+    // =========================================================
+
+    public static Transaction toDomain(
+            TransactionEntity entity) {
+
+        if (entity == null) {
+            throw new IllegalArgumentException(
+                    "TransactionEntity não pode ser nula"
+            );
+        }
+
+        return Transaction.restore(
+                entity.getId(),
+                entity.getUserId(),
+                entity.getDescription(),
+                entity.getAmount(),
+                entity.getOriginalAmount(),
+                entity.getCurrency(),
+                entity.getCategory(),
+                entity.getType(),
+                entity.getCreatedAt()
+        );
     }
 }

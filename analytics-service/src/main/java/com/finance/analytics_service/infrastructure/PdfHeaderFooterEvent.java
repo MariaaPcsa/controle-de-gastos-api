@@ -3,11 +3,13 @@ package com.finance.analytics_service.infrastructure;
 import com.lowagie.text.*;
 import com.lowagie.text.pdf.*;
 
+import java.util.UUID;
+
 public class PdfHeaderFooterEvent extends PdfPageEventHelper {
 
-    private final Long userId;
+    private final UUID userId;
 
-    public PdfHeaderFooterEvent(Long userId) {
+    public PdfHeaderFooterEvent(UUID userId) {
         this.userId = userId;
     }
 

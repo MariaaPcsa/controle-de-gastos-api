@@ -8,6 +8,7 @@ import org.springframework.stereotype.Component;
 
 import java.io.ByteArrayOutputStream;
 import java.util.List;
+import java.util.UUID;
 
 @Component
 public class PdfReportGenerator {
@@ -18,7 +19,7 @@ public class PdfReportGenerator {
         this.repository = repository;
     }
 
-    public byte[] generate(Long userId) {
+    public byte[] generate(UUID userId) {
 
         try (ByteArrayOutputStream out = new ByteArrayOutputStream()) {
 

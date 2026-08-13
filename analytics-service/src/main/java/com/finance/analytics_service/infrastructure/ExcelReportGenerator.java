@@ -6,6 +6,7 @@ import org.apache.poi.xssf.usermodel.XSSFWorkbook;
 import org.springframework.stereotype.Component;
 
 import java.io.ByteArrayOutputStream;
+import java.util.UUID;
 
 @Component
 public class ExcelReportGenerator {
@@ -16,7 +17,7 @@ public class ExcelReportGenerator {
         this.repository = repository;
     }
 
-    public byte[] generate(Long userId) {
+    public byte[] generate(UUID userId) {
         try (XSSFWorkbook workbook = new XSSFWorkbook();
              ByteArrayOutputStream out = new ByteArrayOutputStream()) {
 

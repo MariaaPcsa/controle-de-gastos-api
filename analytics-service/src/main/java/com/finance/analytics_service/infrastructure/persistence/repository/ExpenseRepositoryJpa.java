@@ -11,15 +11,16 @@ import org.springframework.stereotype.Repository;
 import java.math.BigDecimal;
 import java.util.List;
 import java.util.Map;
+import java.util.UUID;
 import java.util.stream.Collectors;
 
 @Repository
 public interface ExpenseRepositoryJpa extends JpaRepository<ExpenseEntity, Long>, ExpenseRepository {
 
-    List<ExpenseEntity> findByUserId(Long userId);
+    List<ExpenseEntity> findByUserId(UUID userId);
 
     @Override
-    default ExpenseSummary getSummaryByUser(Long userId) {
+    default ExpenseSummary getSummaryByUser(UUID userId) {
         List<ExpenseEntity> expenses = findByUserId(userId);
 
         BigDecimal totalMes = expenses.stream()

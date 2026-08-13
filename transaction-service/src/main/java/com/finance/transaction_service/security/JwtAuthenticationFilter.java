@@ -15,20 +15,26 @@ import org.springframework.stereotype.Component;
 import org.springframework.web.filter.OncePerRequestFilter;
 
 import java.io.IOException;
+import java.util.UUID;
 
 @Component
 public class JwtAuthenticationFilter extends OncePerRequestFilter {
 
-    private static final Logger log = LoggerFactory.getLogger(JwtAuthenticationFilter.class);
+    private static final Logger log =
+            LoggerFactory.getLogger(JwtAuthenticationFilter.class);
 
     private final JwtTokenProvider tokenProvider;
 
-    public JwtAuthenticationFilter(JwtTokenProvider tokenProvider) {
+    public JwtAuthenticationFilter(
+            JwtTokenProvider tokenProvider) {
+
         this.tokenProvider = tokenProvider;
     }
 
     @Override
-    protected boolean shouldNotFilter(HttpServletRequest request) {
+    protected boolean shouldNotFilter(
+            HttpServletRequest request) {
+
         String path = request.getRequestURI();
 
         return path.startsWith("/api/auth")
@@ -38,62 +44,97 @@ public class JwtAuthenticationFilter extends OncePerRequestFilter {
     }
 
     @Override
-    protected void doFilterInternal(HttpServletRequest request,
-                                    HttpServletResponse response,
-                                    FilterChain filterChain)
+    protected void doFilterInternal(
+            HttpServletRequest request,
+            HttpServletResponse response,
+            FilterChain filterChain)
             throws ServletException, IOException {
 
-        try {
+        String header =
+                request.getHeader("Authorization");
 
-            String header = request.getHeader("Authorization");
+        if (header == null || !header.startsWith("Bearer ")) {
 
-            if (header != null && header.startsWith("Bearer ")
-                    && SecurityContextHolder.getContext().getAuthentication() == null) {
-
-                String token = header.substring(7);
-
-                if (tokenProvider.validateToken(token)) {
-
-                    // 🔥 PARSE UMA ÚNICA VEZ
-                    Claims claims = tokenProvider.getClaimsSafe(token);
-
-                    if (claims != null) {
-
-                        String username = tokenProvider.getUsername(claims);
-                        String role = tokenProvider.getRole(claims);
-                        Long userId = tokenProvider.getId(claims);
-
-                        if (username != null && role != null && userId != null) {
-
-                            CustomUserDetails userDetails =
-                                    new CustomUserDetails(userId, username, role);
-
-                            UsernamePasswordAuthenticationToken authentication =
-                                    new UsernamePasswordAuthenticationToken(
-                                            userDetails,
-                                            null,
-                                            userDetails.getAuthorities()
-                                    );
-
-                            SecurityContextHolder.getContext().setAuthentication(authentication);
-
-                            log.debug("JWT autenticado: {}", username);
-                        }
-                    }
-                } else {
-                    log.warn("Token inválido recebido");
-                }
-            }
-
-        } catch (Exception e) {
-            log.error("Erro ao processar JWT", e);
-
-            response.setStatus(HttpServletResponse.SC_UNAUTHORIZED);
-            response.setContentType("application/json");
-            response.getWriter().write("{\"error\": \"Token inválido\"}");
+            filterChain.doFilter(request, response);
             return;
         }
 
+        String token = header.substring(7).trim();
+
+        if (token.isBlank()) {
+
+            filterChain.doFilter(request, response);
+            return;
+        }
+
+        try {
+
+            if (tokenProvider.validateToken(token)) {
+
+                Claims claims =
+                        tokenProvider.getClaimsSafe(token);
+
+                if (claims != null) {
+
+                    String username =
+                            tokenProvider.getUsername(claims);
+
+                    String role =
+                            tokenProvider.getRole(claims);
+
+                    UUID userId =
+                            tokenProvider.getUserId(claims);
+
+                    if (username != null
+                            && role != null
+                            && userId != null) {
+
+                        CustomUserDetails userDetails =
+                                new CustomUserDetails(
+                                        userId,
+                                        username,
+                                        role
+                                );
+
+                        UsernamePasswordAuthenticationToken authentication =
+                                new UsernamePasswordAuthenticationToken(
+                                        userDetails,
+                                        null,
+                                        userDetails.getAuthorities()
+                                );
+
+                        SecurityContextHolder
+                                .getContext()
+                                .setAuthentication(authentication);
+
+                        log.debug(
+                                "JWT autenticado: username={}, userId={}, role={}",
+                                username,
+                                userId,
+                                role
+                        );
+                    }
+                }
+
+            } else {
+
+                log.warn("Token JWT inválido");
+            }
+
+        } catch (Exception e) {
+
+            log.warn(
+                    "Não foi possível processar o JWT: {}",
+                    e.getMessage()
+            );
+        }
+
+        /*
+         * Importante:
+         *
+         * O filtro não trata erro de validação do DTO.
+         * O Spring Security continua o processamento.
+         */
         filterChain.doFilter(request, response);
     }
 }

@@ -1,18 +1,15 @@
 package com.finance.analytics_service.infrastructure.persistence.entity;
 
+import jakarta.persistence.Column;
 import jakarta.persistence.Entity;
 import jakarta.persistence.GeneratedValue;
+import jakarta.persistence.GenerationType;
 import jakarta.persistence.Id;
 import jakarta.persistence.Table;
 
-import java.time.LocalDate;
-
-
-
-import jakarta.persistence.*;
-
 import java.math.BigDecimal;
 import java.time.LocalDate;
+import java.util.UUID;
 
 @Entity
 @Table(name = "expenses")
@@ -22,7 +19,8 @@ public class ExpenseEntity {
     @GeneratedValue(strategy = GenerationType.IDENTITY)
     private Long id;
 
-    private Long userId;
+    @Column(nullable = false, columnDefinition = "uuid")
+    private UUID userId;
     private String description;
     private String category;
     private BigDecimal amount;
@@ -30,14 +28,14 @@ public class ExpenseEntity {
 
     // getters e setters
     public Long getId() { return id; }
-    public Long getUserId() { return userId; }
+    public UUID getUserId() { return userId; }
     public String getDescription() { return description; }
     public String getCategory() { return category; }
     public BigDecimal getAmount() { return amount; }
     public LocalDate getDate() { return date; }
 
     public void setId(Long id) { this.id = id; }
-    public void setUserId(Long userId) { this.userId = userId; }
+    public void setUserId(UUID userId) { this.userId = userId; }
     public void setDescription(String description) { this.description = description; }
     public void setCategory(String category) { this.category = category; }
     public void setAmount(BigDecimal amount) { this.amount = amount; }
