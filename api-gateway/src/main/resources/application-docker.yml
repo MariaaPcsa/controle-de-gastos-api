@@ -1,0 +1,109 @@
+spring:
+  config:
+    activate:
+      on-profile: docker
+
+  cloud:
+    gateway:
+
+      routes:
+
+        # ======================================================
+        # USER SERVICE
+        # ======================================================
+
+        - id: user-service
+          uri: http://user:8001
+          predicates:
+            - Path=/api/users/**,/api/auth/**,/api/excel/**
+
+        # ======================================================
+        # TRANSACTION SERVICE
+        # ======================================================
+
+        - id: transaction-service
+          uri: http://transaction-service:8002
+          predicates:
+            - Path=/api/transactions/**
+
+        # ======================================================
+        # ANALYTICS SERVICE
+        # ======================================================
+
+        - id: analytics-service
+          uri: http://analytics-service:8003
+          predicates:
+            - Path=/api/analysis/**
+
+        - id: user-openapi
+          uri: http://user:8001
+          predicates:
+            - Path=/user/v3/api-docs
+          filters:
+            - RewritePath=/user/v3/api-docs,/v3/api-docs
+
+        - id: transaction-openapi
+          uri: http://transaction-service:8002
+          predicates:
+            - Path=/transaction/v3/api-docs
+          filters:
+            - RewritePath=/transaction/v3/api-docs,/v3/api-docs
+
+        - id: analytics-openapi
+          uri: http://analytics-service:8003
+          predicates:
+            - Path=/analytics/v3/api-docs
+          filters:
+            - RewritePath=/analytics/v3/api-docs,/v3/api-docs
+
+      # ======================================================
+      # DEFAULT FILTERS
+      # ======================================================
+
+      default-filters:
+        - RemoveRequestHeader=Cookie
+        - RemoveResponseHeader=Set-Cookie
+        - DedupeResponseHeader=Access-Control-Allow-Origin Access-Control-Allow-Credentials
+
+      # ======================================================
+      # CORS
+      # ======================================================
+
+      globalcors:
+        add-to-simple-url-handler-mapping: true
+
+        cors-configurations:
+          '[/**]':
+            allowedOrigins:
+              - "*"
+
+            allowedMethods:
+              - GET
+              - POST
+              - PUT
+              - DELETE
+              - OPTIONS
+
+            allowedHeaders:
+              - "*"
+
+server:
+  port: 8080
+
+jwt:
+  secret: ${JWT_SECRET:dev-secret-super-long-for-hs256-algo-1234567890}
+
+springdoc:
+  api-docs:
+    path: /v3/api-docs
+
+  swagger-ui:
+    path: /swagger-ui.html
+    disable-swagger-default-url: true
+    urls:
+      - name: user
+        url: /user/v3/api-docs
+      - name: transaction
+        url: /transaction/v3/api-docs
+      - name: analytics
+        url: /analytics/v3/api-docs
