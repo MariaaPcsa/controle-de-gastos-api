@@ -343,8 +343,7 @@ Itens identificados no projeto atual:
 
 ## Problemas e limitações já identificados
 
-- 
-- 
+
 ## Observação final
 
 Este repositório deve ser tratado como uma plataforma em evolução incremental.
