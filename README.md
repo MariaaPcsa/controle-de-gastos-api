@@ -343,13 +343,8 @@ Itens identificados no projeto atual:
 
 ## Problemas e limitações já identificados
 
-- inconsistência entre tipos de `userId` em partes do domínio e integrações
-- inconsistências de contrato Kafka entre `transaction-service` e `analytics-service`
-- documentação anterior muito divergente do código atual
-- cobertura de testes desigual entre os módulos
-- ausência de testes automatizados no `api-gateway`
-- `analytics-service` com lacunas de segurança quando acessado diretamente
-
+- 
+- 
 ## Observação final
 
 Este repositório deve ser tratado como uma plataforma em evolução incremental.
