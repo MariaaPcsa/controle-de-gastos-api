@@ -1,0 +1,2 @@
+jwt:
+  secret: local_test_jwt_secret_please_change
