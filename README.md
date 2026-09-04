@@ -183,6 +183,7 @@ Base principal:
 
 - `POST /api/transactions`
 - `GET /api/transactions`
+- `GET /api/transactions/{id}`
 - `PUT /api/transactions/{id}`
 - `DELETE /api/transactions/{id}`
 - `POST /api/transactions/upload`
@@ -197,7 +198,7 @@ Base principal:
 
 ### Documentação centralizada
 
-- `http://localhost:8080/swagger-ui.html`
+- `http://localhost:8080/swagger-ui.html` abre porque é o Swagger centralizado do gateway.
 
 ### Documentação individual
 

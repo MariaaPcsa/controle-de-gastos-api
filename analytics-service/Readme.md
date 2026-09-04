@@ -163,6 +163,10 @@ O módulo `analytics-service` não possui dependência de `Spring Security` no `
 
 - acesso direto ao serviço em `http://localhost:8003` não está protegido por JWT no próprio módulo
 - acesso pelo `api-gateway` em `http://localhost:8080` continua sujeito à autenticação do gateway
+  http://localhost:8001/swagger-ui.html (user)
+  http://localhost:8002/swagger-ui.html (transaction-service)
+  http://localhost:8003/swagger-ui.html (analytics-service)
+-  http://localhost:8080/swagger-ui.html abre porque é o Swagger centralizado do gateway.
 
 ### Inconsistência de identificação do usuário
 

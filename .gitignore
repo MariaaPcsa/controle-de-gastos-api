@@ -68,3 +68,11 @@ orientacao.txt
 
 # Arquivos de importação de usuários
 user/users_upload.xlsx
+.github/copilot-instructions.md
+
+# Relatórios gerados em runtime
+relatorio-*.pdf
+relatorio-*.xlsx
+
+# Configuração do agente IA
+AGENTS.md

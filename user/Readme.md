@@ -82,8 +82,7 @@ docker compose up -d --build
 
 Documentação individual do serviço:
 
-- `http://loca
-- lhost:8001/swagger-ui.html`
+http://localhost:8001/swagger-ui.html
 
 Documentação centralizada pelo gateway:
 
