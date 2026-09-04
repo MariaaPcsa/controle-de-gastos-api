@@ -3,6 +3,7 @@ package com.finance.transaction_service.integration;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.finance.transaction_service.infrastructure.persistence.repository.TransactionRepositoryJpa;
 import com.finance.transaction_service.presentation.dto.ImportResultDTO;
+import com.finance.transaction_service.security.CustomUserDetails;
 
 import org.apache.kafka.clients.consumer.ConsumerConfig;
 import org.apache.kafka.clients.consumer.KafkaConsumer;
@@ -37,6 +38,7 @@ import java.util.UUID;
 
 import static org.assertj.core.api.Assertions.assertThat;
 
+import static org.springframework.security.test.web.servlet.request.SecurityMockMvcRequestPostProcessors.user;
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.multipart;
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.status;
 
@@ -235,10 +237,16 @@ class TransactionImportIntegrationTest {
         // UPLOAD
         // =====================================================
 
+        CustomUserDetails testUser = new CustomUserDetails(
+                USER_ID,
+                "test-user",
+                "USER");
+
         var mvcResult = mockMvc.perform(
                 multipart(
                         "/api/transactions/upload")
-                        .file(file))
+                        .file(file)
+                        .with(user(testUser)))
                 .andExpect(status().isOk())
                 .andReturn();
 
