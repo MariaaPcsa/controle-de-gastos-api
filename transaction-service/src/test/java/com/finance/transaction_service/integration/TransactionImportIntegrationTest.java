@@ -148,7 +148,6 @@ class TransactionImportIntegrationTest {
         Row header = sheet.createRow(0);
 
         String[] cols = {
-                "userId",
                 "occurredAt",
                 "type",
                 "amount",
@@ -169,25 +168,22 @@ class TransactionImportIntegrationTest {
         Row r1 = sheet.createRow(1);
 
         r1.createCell(0)
-                .setCellValue(USER_ID.toString());
-
-        r1.createCell(1)
                 .setCellValue(
                         "2026-04-01T10:00:00");
 
-        r1.createCell(2)
+        r1.createCell(1)
                 .setCellValue("DEPOSIT");
 
-        r1.createCell(3)
+        r1.createCell(2)
                 .setCellValue(1000.00);
 
-        r1.createCell(4)
+        r1.createCell(3)
                 .setCellValue("BRL");
 
-        r1.createCell(5)
+        r1.createCell(4)
                 .setCellValue("SALARY");
 
-        r1.createCell(6)
+        r1.createCell(5)
                 .setCellValue("Salary April");
 
         // =====================================================
@@ -197,25 +193,22 @@ class TransactionImportIntegrationTest {
         Row r2 = sheet.createRow(2);
 
         r2.createCell(0)
-                .setCellValue(USER_ID.toString());
-
-        r2.createCell(1)
                 .setCellValue(
                         "2026-04-02T12:00:00");
 
-        r2.createCell(2)
+        r2.createCell(1)
                 .setCellValue("WITHDRAW");
 
-        r2.createCell(3)
+        r2.createCell(2)
                 .setCellValue(50.25);
 
-        r2.createCell(4)
+        r2.createCell(3)
                 .setCellValue("BRL");
 
-        r2.createCell(5)
+        r2.createCell(4)
                 .setCellValue("GROCERIES");
 
-        r2.createCell(6)
+        r2.createCell(5)
                 .setCellValue("Supermarket");
 
         // =====================================================
