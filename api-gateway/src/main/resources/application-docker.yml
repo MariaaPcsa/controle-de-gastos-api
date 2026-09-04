@@ -100,6 +100,7 @@ springdoc:
   swagger-ui:
     path: /swagger-ui.html
     disable-swagger-default-url: true
+    urlsPrimaryName: user
     urls:
       - name: user
         url: /user/v3/api-docs
