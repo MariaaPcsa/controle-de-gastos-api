@@ -31,8 +31,15 @@ public class AnalysisApplicationService implements ProcessTransactionUseCase, Ge
 
     @Override
     public void process(ExpenseEntity expense) {
-        // já está persistido pelo consumer
-        System.out.println("Despesa processada: " + expense.getDescription());
+        if (expense == null) {
+            throw new IllegalArgumentException("Despesa não pode ser nula");
+        }
+
+        if (expense.getUserId() == null) {
+            throw new IllegalArgumentException("UserId da despesa é obrigatório");
+        }
+
+        expenseRepository.save(expense);
     }
 
     public ExpenseSummary getSummary(UUID userId) {
