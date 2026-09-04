@@ -41,6 +41,53 @@ class TransactionControllerTest {
     }
 
     @Test
+    void should_get_transaction_by_id() {
+
+        CustomUserDetails userDetails =
+                mock(CustomUserDetails.class);
+
+        when(userDetails.getId())
+                .thenReturn(userId);
+
+        Transaction transaction = Transaction.restore(
+                UUID.randomUUID(),
+                userId,
+                "Mercado",
+                BigDecimal.valueOf(120),
+                BigDecimal.valueOf(120),
+                "BRL",
+                "ALIMENTACAO",
+                TransactionType.WITHDRAW,
+                LocalDateTime.now()
+        );
+
+        when(service.getById(transaction.getId(), userId))
+                .thenReturn(transaction);
+
+        ResponseEntity<TransactionResponseDTO> response =
+                controller.getById(transaction.getId(), userDetails);
+
+        assertEquals(200, response.getStatusCode().value());
+        assertNotNull(response.getBody());
+        assertEquals(transaction.getId(), response.getBody().getId());
+
+        verify(service, times(1))
+                .getById(transaction.getId(), userId);
+    }
+
+    @Test
+    void should_return_unauthorized_on_get_by_id_when_user_not_authenticated() {
+
+        ResponseEntity<TransactionResponseDTO> response =
+                controller.getById(UUID.randomUUID(), null);
+
+        assertEquals(401, response.getStatusCode().value());
+
+        verify(service, never())
+                .getById(any(UUID.class), any(UUID.class));
+    }
+
+    @Test
     void should_list_transactions() {
 
         // =====================================================
@@ -121,7 +168,7 @@ class TransactionControllerTest {
 
         assertEquals(
                 200,
-                response.getStatusCodeValue()
+                response.getStatusCode().value()
         );
 
         PagedResponseDTO<TransactionResponseDTO> result =

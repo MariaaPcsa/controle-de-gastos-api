@@ -4,6 +4,7 @@ import com.finance.transaction_service.domain.repository.TransactionRepository;
 import com.finance.transaction_service.domain.usecase.CreateTransactionUseCase;
 import com.finance.transaction_service.domain.usecase.UpdateTransactionUseCase;
 import com.finance.transaction_service.domain.usecase.DeleteTransactionUseCase;
+import com.finance.transaction_service.domain.usecase.GetTransactionByIdUseCase;
 import com.finance.transaction_service.domain.usecase.ListTransactionsUseCase;
 import com.finance.transaction_service.infrastructure.kafka.KafkaTransactionProducer;
 import org.springframework.context.annotation.Bean;
@@ -25,6 +26,11 @@ public class UseCaseConfig {
     @Bean
     public DeleteTransactionUseCase deleteTransactionUseCase(TransactionRepository repository) {
         return new DeleteTransactionUseCase(repository);
+    }
+
+    @Bean
+    public GetTransactionByIdUseCase getTransactionByIdUseCase(TransactionRepository repository) {
+        return new GetTransactionByIdUseCase(repository);
     }
 
     @Bean
