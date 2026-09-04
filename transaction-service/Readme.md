@@ -104,17 +104,11 @@ Rotas públicas identificadas na configuração atual:
 |--------|------|-----------|------------------|
 | POST | `/api/transactions` | Criar transação | `201 Created`, `400 Bad Request`, `401 Unauthorized` |
 | GET | `/api/transactions` | Listar transações do usuário autenticado | `200 OK`, `401 Unauthorized` |
+| GET | `/api/transactions/{id}` | Consultar transação por ID do usuário autenticado | `200 OK`, `401 Unauthorized`, `403 Forbidden`, `404 Not Found` |
 | PUT | `/api/transactions/{id}` | Atualizar transação | `200 OK`, `401 Unauthorized`, `403 Forbidden`, `404 Not Found` |
 | DELETE | `/api/transactions/{id}` | Excluir transação | `204 No Content`, `400 Bad Request`, `401 Unauthorized`, `403 Forbidden`, `404 Not Found` |
 | POST | `/api/transactions/upload` | Importar transações via XLSX | `200 OK`, `400 Bad Request`, `401 Unauthorized` |
 
-## Endpoint citado na documentação antiga, mas não implementado hoje
-
-O README antigo informava a rota abaixo:
-
-- `GET /api/transactions/{id}`
-
-Esse endpoint **não está implementado atualmente** no `TransactionController`.
 
 ## Filtros disponíveis na listagem
 

@@ -226,6 +226,50 @@ public class TransactionController {
     }
 
     // =========================================================
+    // GET BY ID
+    // =========================================================
+
+    @GetMapping("/{id}")
+    @Operation(summary = "Consultar minha transação por ID")
+    @ApiResponse(
+            responseCode = "200",
+            description = "Transação retornada com sucesso"
+    )
+    @ApiResponse(
+            responseCode = "401",
+            description = "Usuário não autenticado"
+    )
+    @ApiResponse(
+            responseCode = "403",
+            description = "Sem permissão para consultar"
+    )
+    @ApiResponse(
+            responseCode = "404",
+            description = "Transação não encontrada"
+    )
+    public ResponseEntity<TransactionResponseDTO> getById(
+
+            @Parameter(description = "ID da transação")
+            @PathVariable UUID id,
+
+            @AuthenticationPrincipal
+            CustomUserDetails user) {
+
+        if (user == null || user.getId() == null) {
+            return ResponseEntity
+                    .status(HttpStatus.UNAUTHORIZED)
+                    .build();
+        }
+
+        Transaction transaction =
+                service.getById(id, user.getId());
+
+        return ResponseEntity.ok(
+                toResponse(transaction)
+        );
+    }
+
+    // =========================================================
     // UPDATE
     // =========================================================
 

@@ -1,11 +1,17 @@
 package com.finance.analytics_service.infrastructure;
 
 import com.finance.analytics_service.infrastructure.persistence.repository.ExpenseRepositoryJpa;
+import com.finance.analytics_service.infrastructure.persistence.entity.ExpenseEntity;
 import org.apache.poi.ss.usermodel.*;
 import org.apache.poi.xssf.usermodel.XSSFWorkbook;
 import org.springframework.stereotype.Component;
 
 import java.io.ByteArrayOutputStream;
+import java.math.BigDecimal;
+import java.math.RoundingMode;
+import java.time.format.DateTimeFormatter;
+import java.util.Comparator;
+import java.util.List;
 import java.util.UUID;
 
 @Component
@@ -20,6 +26,21 @@ public class ExcelReportGenerator {
     public byte[] generate(UUID userId) {
         try (XSSFWorkbook workbook = new XSSFWorkbook();
              ByteArrayOutputStream out = new ByteArrayOutputStream()) {
+
+            List<ExpenseEntity> expenses = repository.findByUserId(userId)
+                    .stream()
+                    .sorted(Comparator.comparing(ExpenseEntity::getDate, Comparator.nullsLast(Comparator.naturalOrder())).reversed())
+                    .toList();
+
+            BigDecimal total = expenses.stream()
+                    .map(ExpenseEntity::getAmount)
+                    .reduce(BigDecimal.ZERO, BigDecimal::add);
+
+            BigDecimal average = expenses.isEmpty()
+                    ? BigDecimal.ZERO
+                    : total.divide(BigDecimal.valueOf(expenses.size()), 2, RoundingMode.HALF_UP);
+
+            int qtd = expenses.size();
 
             Sheet sheet = workbook.createSheet("Dashboard");
 
@@ -78,19 +99,14 @@ public class ExcelReportGenerator {
                 cell.setCellStyle(kpiStyle);
             }
 
-            // 🔥 dados reais (depois trocar pelo banco)
-            double total = 2500.00;
-            double media = 250.00;
-            int qtd = 10;
-
             Row kpiValues = sheet.createRow(3);
 
             Cell totalCell = kpiValues.createCell(0);
-            totalCell.setCellValue(total);
+            totalCell.setCellValue(total.doubleValue());
             totalCell.setCellStyle(moneyStyle);
 
             Cell mediaCell = kpiValues.createCell(1);
-            mediaCell.setCellValue(media);
+            mediaCell.setCellValue(average.doubleValue());
             mediaCell.setCellStyle(moneyStyle);
 
             kpiValues.createCell(2).setCellValue(qtd);
@@ -110,7 +126,7 @@ public class ExcelReportGenerator {
             headerStyle.setFillForegroundColor(IndexedColors.BLUE.getIndex());
             headerStyle.setFillPattern(FillPatternType.SOLID_FOREGROUND);
 
-            String[] cols = {"Data", "Descrição", "Valor"};
+            String[] cols = {"Data", "Descrição", "Categoria", "Valor"};
 
             for (int i = 0; i < cols.length; i++) {
                 Cell cell = header.createCell(i);
@@ -131,31 +147,45 @@ public class ExcelReportGenerator {
 
             int rowIndex = 6;
 
-            for (int i = 0; i < 10; i++) {
+            DateTimeFormatter dateFormat = DateTimeFormatter.ofPattern("dd/MM/yyyy");
 
+            if (expenses.isEmpty()) {
                 Row row = sheet.createRow(rowIndex);
-
-                CellStyle style = (rowIndex % 2 == 0) ? even : odd;
-
                 Cell c1 = row.createCell(0);
-                c1.setCellValue("2026-04-22");
-                c1.setCellStyle(style);
+                c1.setCellValue("Sem despesas para o usuário informado.");
+                c1.setCellStyle(odd);
+                sheet.addMergedRegion(new org.apache.poi.ss.util.CellRangeAddress(rowIndex, rowIndex, 0, 3));
+            } else {
+                for (ExpenseEntity expense : expenses) {
 
-                Cell c2 = row.createCell(1);
-                c2.setCellValue("Despesa " + i);
-                c2.setCellStyle(style);
+                    Row row = sheet.createRow(rowIndex);
 
-                Cell c3 = row.createCell(2);
-                c3.setCellValue(100 + i * 10);
-                c3.setCellStyle(moneyStyle);
+                    CellStyle style = (rowIndex % 2 == 0) ? even : odd;
 
-                rowIndex++;
+                    Cell c1 = row.createCell(0);
+                    c1.setCellValue(expense.getDate() != null ? expense.getDate().format(dateFormat) : "-");
+                    c1.setCellStyle(style);
+
+                    Cell c2 = row.createCell(1);
+                    c2.setCellValue(expense.getDescription() != null ? expense.getDescription() : "-");
+                    c2.setCellStyle(style);
+
+                    Cell c3 = row.createCell(2);
+                    c3.setCellValue(expense.getCategory() != null ? expense.getCategory() : "-");
+                    c3.setCellStyle(style);
+
+                    Cell c4 = row.createCell(3);
+                    c4.setCellValue(expense.getAmount() != null ? expense.getAmount().doubleValue() : 0D);
+                    c4.setCellStyle(moneyStyle);
+
+                    rowIndex++;
+                }
             }
 
             // =========================
             // 📏 AUTO SIZE
             // =========================
-            for (int i = 0; i < 3; i++) {
+            for (int i = 0; i < 4; i++) {
                 sheet.autoSizeColumn(i);
             }
 

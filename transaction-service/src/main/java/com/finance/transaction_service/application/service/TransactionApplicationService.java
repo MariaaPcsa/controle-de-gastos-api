@@ -5,6 +5,7 @@ import com.finance.transaction_service.domain.model.TransactionType;
 import com.finance.transaction_service.domain.usecase.CreateTransactionUseCase;
 import com.finance.transaction_service.domain.usecase.UpdateTransactionUseCase;
 import com.finance.transaction_service.domain.usecase.DeleteTransactionUseCase;
+import com.finance.transaction_service.domain.usecase.GetTransactionByIdUseCase;
 import com.finance.transaction_service.domain.usecase.ListTransactionsUseCase;
 import com.finance.transaction_service.infrastructure.external.ExchangeRateClient;
 import com.finance.transaction_service.presentation.dto.FilterTransactionDTO;
@@ -20,6 +21,7 @@ public class TransactionApplicationService {
     private final CreateTransactionUseCase createUseCase;
     private final UpdateTransactionUseCase updateUseCase;
     private final DeleteTransactionUseCase deleteUseCase;
+    private final GetTransactionByIdUseCase getByIdUseCase;
     private final ListTransactionsUseCase listUseCase;
     private final ExchangeRateClient exchangeRateClient;
 
@@ -27,14 +29,33 @@ public class TransactionApplicationService {
             CreateTransactionUseCase createUseCase,
             UpdateTransactionUseCase updateUseCase,
             DeleteTransactionUseCase deleteUseCase,
+            GetTransactionByIdUseCase getByIdUseCase,
             ListTransactionsUseCase listUseCase,
             ExchangeRateClient exchangeRateClient) {
 
         this.createUseCase = createUseCase;
         this.updateUseCase = updateUseCase;
         this.deleteUseCase = deleteUseCase;
+        this.getByIdUseCase = getByIdUseCase;
         this.listUseCase = listUseCase;
         this.exchangeRateClient = exchangeRateClient;
+    }
+
+    // =========================================================
+    // GET BY ID
+    // =========================================================
+
+    public Transaction getById(
+            UUID transactionId,
+            UUID userId) {
+
+        validateTransactionId(transactionId);
+        validateUserId(userId);
+
+        return getByIdUseCase.execute(
+                transactionId,
+                userId
+        );
     }
 
     // =========================================================
